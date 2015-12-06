@@ -34,7 +34,3 @@ As of right now, there are no concrete plans for a web client, but we do intend 
 Hermes messenger was conceived in a discussion thread of the UConn Cyber Security Club. As of right now, we would prefer to keep the development to people who are part of that club - that way we can meet in person while integrating the development of the app into club activities. Once the program is more or less functional, we will be more than happy to include other developers if anyone is interested. We have no idea what kind of format any of this will be done in. On the other hand if you are an active member of the UConn Cyber Security Club you should follow this repo, and contact one of the developers to discuss what you can contribute.
 
 All that being said, absolutely anyone is free to modify this code and we are always open to suggestions and improvements. We would love for Hermes to be a success and, even more importantly, we want it to be as secure as possible.
-
-### Style Guide
-
-We will be adhering to Google's Python style guide for writing Hermes so please be sure to read it here before contributing: [https://google.github.io/styleguide/pyguide.html](https://google.github.io/styleguide/pyguide.html)
