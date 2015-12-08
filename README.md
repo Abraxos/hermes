@@ -1,5 +1,5 @@
 # Hermes
-A secure messaging systems with a focus on usability and configurability developed by the UConn Cyber Security Club
+A secure messaging system with a focus on usability and configurability developed by the UConn Cyber Security Club
 
 ## Summary:
 
