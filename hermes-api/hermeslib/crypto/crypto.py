@@ -20,10 +20,10 @@ def symmetric_decrypt(ciphertext, key):
     return cipher.decrypt(ciphertext)[AES.block_size:]
 
 
-def private_key_from_file(filepath):
-    with open(filepath, 'rb') as f:
-        pk = PrivateKey.load_pkcs1(f.read(), format='PEM')
-    return pk
+def private_key_to_file(private_key, filepath):
+    with open(filepath, 'wb+') as f:
+        pk = PublicKey.save_pkcs1(private_key, format='PEM')
+        f.write(pk)
 
 
 def public_key_to_file(public_key, filepath):
