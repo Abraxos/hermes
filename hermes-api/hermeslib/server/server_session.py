@@ -10,6 +10,7 @@ class ServerSession(object):
 
     def __init__(self, key=None):
         self.user = None
+        self.message_buffer = []
         if key:
             self.key = key
         else:
@@ -18,4 +19,5 @@ class ServerSession(object):
     def data_received(self, data):
         msg = symmetric_decrypt(data, self.key)
         # TODO: Implement message handling in a session
-        log("Received Message: " + msg)
+        log("Received Session Message: {0}".format(msg))
+        self.message_buffer.append(msg)
