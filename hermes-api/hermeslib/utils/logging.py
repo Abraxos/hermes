@@ -1,6 +1,3 @@
-import pprint as pp
-
-
-#TODO: Consult with Jon Roemer on how to do logging properly
+# TODO: Re-write logging functionality to use native twisted asynchronous logging functions
 def log(msg):
-    pp.pprint(msg)
+    print(str(msg))

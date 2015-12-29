@@ -6,9 +6,6 @@ from ..utils.logging import *
 from ..crypto.crypto import *
 
 
-
-
-
 class HermesClientProtocol(Protocol):
 
     class State(Enum):
@@ -62,9 +59,9 @@ class HermesClientProtocol(Protocol):
 
 class HermesClientFactory(ClientFactory):
 
-    def __init__(self, priv_key, pub_key, server_pub_key):
-        self.priv_key = priv_key
-        self.pub_key = pub_key
+    def __init__(self, private_key, public_key, server_pub_key):
+        self.private_key = private_key
+        self.public_key = public_key
         self.server_pub_key = server_pub_key
 
     def buildProtocol(self, addr):
