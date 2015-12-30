@@ -19,7 +19,16 @@ class CryptoTestCase(unittest.TestCase):
         self.assertEqual(len(key), 32)
 
     def test_symmetric_encryption_decryption(self):
-        msg = b'All that is gold does not glitter, not all those who wander are lost, the old that is strong does not whither, deep roots are not touched by the frost. From the ashes a fire shall be woken, a light from the shadow shall spring, renewed be the blade that was broken, the crownless again shall be king. All that is gold does not glitter, not all those who wander are lost, the old that is strong does not whither, deep roots are not touched by the frost. From the ashes a fire shall be woken, a light from the shadow shall spring, renewed be the blade that was broken, the crownless again shall be king.'
+        msg = b'''All that is gold does not glitter, not all those who wander
+         are lost, the old that is strong does not whither, deep roots are 
+         not touched by the frost. From the ashes a fire shall be woken, a 
+         light from the shadow shall spring, renewed be the blade that was 
+         broken, the crownless again shall be king. All that is gold does not
+          glitter, not all those who wander are lost, the old that is strong 
+          does not whither, deep roots are not touched by the frost. From 
+          the ashes a fire shall be woken, a light from the shadow shall 
+          spring, renewed be the blade that was broken, the crownless again 
+          shall be king.'''
         key = gen_symmetric_key()
         ciphertext = symmetric_encrypt(msg, key)
         self.assertNotEqual(msg, ciphertext)
@@ -27,7 +36,16 @@ class CryptoTestCase(unittest.TestCase):
         self.assertEqual(msg, deciphered)
 
     def test_asymmetric_encryption_decryption(self):
-        msg = b'All that is gold does not glitter, not all those who wander are lost, the old that is strong does not whither, deep roots are not touched by the frost. From the ashes a fire shall be woken, a light from the shadow shall spring, renewed be the blade that was broken, the crownless again shall be king. All that is gold does not glitter, not all those who wander are lost, the old that is strong does not whither, deep roots are not touched by the frost. From the ashes a fire shall be woken, a light from the shadow shall spring, renewed be the blade that was broken, the crownless again shall be king.'
+        msg = b'''All that is gold does not glitter, not all those who wander
+         are lost, the old that is strong does not whither, deep roots are 
+         not touched by the frost. From the ashes a fire shall be woken, a 
+         light from the shadow shall spring, renewed be the blade that was 
+         broken, the crownless again shall be king. All that is gold does not
+          glitter, not all those who wander are lost, the old that is strong 
+          does not whither, deep roots are not touched by the frost. From 
+          the ashes a fire shall be woken, a light from the shadow shall 
+          spring, renewed be the blade that was broken, the crownless again 
+          shall be king.'''
         ciphertext = asymmetric_encrypt_sign(
             msg, self._pub_key2, self._priv_key1)
         self.assertNotEqual(msg, ciphertext)

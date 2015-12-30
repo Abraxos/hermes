@@ -6,13 +6,18 @@ from hermeslib.server.hermes_server import *
 
 
 class MyTestCase(unittest.TestCase):
-    _server_private_key = private_key_from_file('hermeslib/tests/testing_data/server_test_key.pem')
-    _server_public_key = public_key_from_file('hermeslib/tests/testing_data/server_test_key_pub.pem')
-    _client_private_key = private_key_from_file('hermeslib/tests/testing_data/client_test_key.pem')
-    _client_public_key = public_key_from_file('hermeslib/tests/testing_data/client_test_key_pub.pem')
+    _server_private_key = private_key_from_file(
+        'hermeslib/tests/testing_data/server_test_key.pem')
+    _server_public_key = public_key_from_file(
+        'hermeslib/tests/testing_data/server_test_key_pub.pem')
+    _client_private_key = private_key_from_file(
+        'hermeslib/tests/testing_data/client_test_key.pem')
+    _client_public_key = public_key_from_file(
+        'hermeslib/tests/testing_data/client_test_key_pub.pem')
 
     def test_connection_made(self):
-        factory = HermesFactory(self._server_private_key, self._server_public_key)
+        factory = HermesFactory(
+            self._server_private_key, self._server_public_key)
         self.proto = factory.buildProtocol("localhost")
         self.transport = proto_helpers.StringTransport()
 
@@ -45,7 +50,7 @@ class MyTestCase(unittest.TestCase):
     def test_challenge_verification(self):
         factory = HermesFactory(self._server_private_key,
                                 self._server_public_key)
-        self.proto = factory.buildProtocol("localhost")
+        self.p = factory.buildProtocol("localhost")
         self.transport = proto_helpers.StringTransport()
 
         pks = public_key_to_str(self._client_public_key)
@@ -53,24 +58,25 @@ class MyTestCase(unittest.TestCase):
                                              self._server_public_key,
                                              self._client_private_key)
 
-        self.proto.makeConnection(self.transport)
-        self.proto.dataReceived(ciphertext)
-        challenge = asymmetric_decrypt_verify(self.transport.value(),
-                                              self._client_private_key,
-                                              self._server_public_key)
+        self.p.makeConnection(self.transport)
+        self.p.dataReceived(ciphertext)
+        c = asymmetric_decrypt_verify(self.transport.value(),
+                                      self._client_private_key,
+                                      self._server_public_key)
         self.transport.clear()
-        self.assertTrue(challenge)
-        self.assertEqual(challenge, self.proto.challenge)
+        self.assertTrue(c)
+        self.assertEqual(c, self.p.challenge)
 
-        self.proto.dataReceived(asymmetric_encrypt_sign(challenge,
-                                                        self._server_public_key,
-                                                        self._client_private_key))
+        self.p.dataReceived(
+            asymmetric_encrypt_sign(c,
+                                    self._server_public_key,
+                                    self._client_private_key))
         server_reply = asymmetric_decrypt_verify(self.transport.value(),
                                                  self._client_private_key,
                                                  self._server_public_key)
         self.transport.clear()
         self.assertTrue(server_reply)
-        self.assertEqual(server_reply, self.proto.session.key)
+        self.assertEqual(server_reply, self.p.session.key)
 
     def test_challenge_verification_failure(self):
         factory = HermesFactory(self._server_private_key,
@@ -92,9 +98,10 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(challenge)
         self.assertEqual(challenge, self.proto.challenge)
 
-        self.proto.dataReceived(asymmetric_encrypt_sign(challenge,
-                                                        self._server_public_key,
-                                                        self._server_private_key))
+        self.proto.dataReceived(
+            asymmetric_encrypt_sign(challenge,
+                                    self._server_public_key,
+                                    self._server_private_key))
         server_reply = self.transport.value()
         self.assertEqual(server_reply, b"Challenge failure.")
 
@@ -118,12 +125,13 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(challenge)
         self.assertEqual(challenge, self.proto.challenge)
 
-        self.proto.dataReceived(asymmetric_encrypt_sign(challenge,
-                                                        self._server_public_key,
-                                                        self._client_private_key))
+        self.proto.dataReceived(
+            asymmetric_encrypt_sign(challenge,
+                                    self._server_public_key,
+                                    self._client_private_key))
         session_key = asymmetric_decrypt_verify(self.transport.value(),
-                                                 self._client_private_key,
-                                                 self._server_public_key)
+                                                self._client_private_key,
+                                                self._server_public_key)
         self.transport.clear()
         self.assertTrue(session_key)
         self.assertEqual(session_key, self.proto.session.key)
