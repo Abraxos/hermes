@@ -8,7 +8,50 @@ Assuming you have cloned the hermes git repo. Run the following code starting fr
 
 ### Step 1: Setup VirtualEnv using VirtualEnvWrapper
 
+Install virtualenv and virtualenvwrapper like so:
 
+```
+# apt-get install virtualenv virtualenvwrapper
+```
+
+Create a new virtualenv in the `hermes/hermes-api/hermeslib/` directory
+
+```
+$ cd hermes/hermes-api/hermeslib
+$ mkvirtualenv --python=/usr/bin/python3.4 hermeslib-dev
+```
+
+Now, whenever you want to work on hermeslib you can startup the environment by simply executing the command:
+
+```
+$ workon hermeslib-dev
+```
+
+### Step 2: Install dependencies
+
+```
+(hermeslib-dev)$ pip install twisted pycrypto sqlalchemy rsa pastescript
+```
+
+### Step 3: Develop the Package
+
+You can use the `setup.py` script to make sure that the package is ready to be programmed against. I believe you should execute this command every time you pull from hermes to make sure that everything is up-to-date in the package metadata.
+
+```
+(hermeslib-dev)$ python setup.py develop
+```
+
+And now you should be ready to program HermesLib. To run the unit tests, simply execute the following command from the `hermes/hermes-api/hermeslib` directory:
+
+```
+(hermeslib-dev)$ python -m unittest discover -v
+```
+
+To exit from the virtualenv simply execute the command:
+
+```
+(hermeslib-dev)$ deactivate
+```
 
 ## How We Set Up Hermes
 
