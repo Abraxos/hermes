@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: hermeslib
+Version: 0.0.1dev-r0
+Summary: Library for servers and clients of the Hermes Secure Messaging Protocol
+Home-page: eugene.kovalev.systems
+Author: Eugene Kovalev
+Author-email: euge.kovalev@gmail.com
+License: GPLv3
+Description: Hermes is a protocol for secure chat messaging. This library defines the core of protocol as well as giving sample APIs that use it on both the server and the client sides.
+Keywords: hermes cryptography chat messenger client server network twisted
+Platform: UNKNOWN
