@@ -6,10 +6,10 @@ from hermeslib.server.hermes_server import *
 
 
 class MyTestCase(unittest.TestCase):
-    _server_private_key = private_key_from_file('testing_data/server_test_key.pem')
-    _server_public_key = public_key_from_file('testing_data/server_test_key_pub.pem')
-    _client_private_key = private_key_from_file('testing_data/client_test_key.pem')
-    _client_public_key = public_key_from_file('testing_data/client_test_key_pub.pem')
+    _server_private_key = private_key_from_file('hermeslib/tests/testing_data/server_test_key.pem')
+    _server_public_key = public_key_from_file('hermeslib/tests/testing_data/server_test_key_pub.pem')
+    _client_private_key = private_key_from_file('hermeslib/tests/testing_data/client_test_key.pem')
+    _client_public_key = public_key_from_file('hermeslib/tests/testing_data/client_test_key_pub.pem')
 
     def test_connection_made(self):
         factory = HermesFactory(self._server_private_key, self._server_public_key)
