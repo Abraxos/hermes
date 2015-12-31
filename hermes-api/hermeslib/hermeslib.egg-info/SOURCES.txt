@@ -16,7 +16,7 @@ hermeslib/server/__init__.py
 hermeslib/server/hermes_server.py
 hermeslib/server/server_session.py
 hermeslib/tests/__init__.py
-hermeslib/tests/hermes_server_tests.py
 hermeslib/tests/test_crypto.py
+hermeslib/tests/test_hermes_server.py
 hermeslib/utils/__init__.py
 hermeslib/utils/logging.py

@@ -11,7 +11,7 @@ Assuming you have cloned the hermes git repo. Run the following code starting fr
 Install virtualenv and virtualenvwrapper like so:
 
 ```
-# apt-get install virtualenv virtualenvwrapper
+# apt-get install python-virtualenv virtualenvwrapper
 ```
 
 Create a new virtualenv in the `hermes/hermes-api/hermeslib/` directory
