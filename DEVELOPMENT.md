@@ -212,3 +212,79 @@ The final step is to simply execute the following command every time you want to
 ```
 (hermeslib)$ python setup.py develop
 ```
+---
+# Installing the UI
+
+This assumes you have installed virtualenv and virtualenvwrapper, and that you've named your virtual environment (not necessarily the directory!) `hermeslib-dev`
+
+### Step 1: Install Qt5
+
+http://www.qt.io/download-open-source/
+
+Note the path to the Qt directory for step 3. Let's say it is called `Qt`
+
+### Step 2: Download and install Sip
+
+https://riverbankcomputing.com/software/sip/download
+
+After unzipping:
+
+```shell
+$ cd sip-4.xx/
+$ python3 configure.py -d $WORKON_HOME/hermeslib-dev/lib/python3.4/site-packages --arch x86_64
+$ make
+$ sudo make install
+$ sudo make clean
+```
+
+### Step 3: Download and install PyQt5
+
+https://riverbankcomputing.com/software/pyqt/download5
+
+After unzipping:
+
+```shell
+$ cd PyQt-gpl-x.x.x/
+$ python3 configure.py --destdir $WORKON_HOME/hermeslib-dev/lib/python3.4/site-packages --qmake Qt/5.5/clang_64/bin/qmake
+$ make
+$ sudo make install
+$ sudo make clean
+```
+
+
+*There may be a chance that the 'make' step failed due to a missing C header. This is most likely the qgeolocation.h file. The solution from the below link seemed to work for me. Basically, just copy the header file from the link the user gives into PyQt-gpl-x.x.x/QtPositioning/, and run the 'make' step again.*
+
+http://stackoverflow.com/questions/33446131/pyqt5-error-during-python3-configure-py-fatal-error-qgeolocation-h-file-no/33453675#33453675
+
+### Step 4. Test to see that it has installed correctly.
+
+```shell
+$ workon hermeslib-dev
+$ (hermeslib-dev) python -c "import PyQt5"
+```
+
+Nothing should happen. If you get an import exception, it hasn't been installed correctly.
+
+## Installing a third-party Twisted reactor to work with Qt5
+
+For now, until we have finalized how Twisted will integrate with Qt's event loop, we could use the reactor from this repo: https://github.com/sunu/qt5reactor.
+
+Quoting from the repo's README on installing and using:
+
+```shell
+$ (hermeslib-dev) pip install qt5reactor
+```
+
+Before running / importing any other Twisted code, invoke:
+
+```python
+app = QApplication(sys.argv) # your code to init QtCore
+from twisted.application import reactors
+reactors.installReactor('qt5')
+```
+or
+```python
+app = QApplication(sys.argv) # your code to init QtCore
+import qt5reactor
+qt5reactor.install()
+```
