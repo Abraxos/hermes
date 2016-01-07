@@ -37,6 +37,7 @@ class HermesProtocol(Protocol):
         del self.factory.protocols[self.id()]
 
     def _symmetric_encrypt_send(self, data, key=None):
+        assert data
         key = key if key else self.session.key
         if not key:
             log("SERVER WARNING: Attempted to send session message before session was established")
@@ -45,7 +46,7 @@ class HermesProtocol(Protocol):
         self.transport.write(ciphertext)
 
     def _symmetric_decrypt(self, data, key=None):
-        self.key = key if key else self.session.key
+        key = key if key else self.session.key
         if not key:
             log("SERVER WARNING: Attempted to interpret session message before session was established")
             return
