@@ -135,7 +135,7 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(session_key)
         self.assertEqual(session_key, self.proto.session.key)
 
-        long_msg = b"""
+        long_msg = b"""TEXT:
         All that is gold does not glitter
         Not all those who wander are lost
         The old that is strong does not whither

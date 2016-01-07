@@ -47,6 +47,7 @@ class HermesClientProtocol(Protocol):
                                          self.factory.server_public_key)
 
     def _symmetric_encrypt_send(self, data, key=None):
+        assert data
         key = key if key else self.session.key
         if not key:
             log("CLIENT WARNING: Attempted to send session message before session was established")
@@ -55,7 +56,7 @@ class HermesClientProtocol(Protocol):
         self.transport.write(ciphertext)
 
     def _symmetric_decrypt(self, data, key=None):
-        self.key = key if key else self.session.key
+        key = key if key else self.session.key
         if not key:
             log("CLIENT WARNING: Attempted to interpret session message before session was established")
             return

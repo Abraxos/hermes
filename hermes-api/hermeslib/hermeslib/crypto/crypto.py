@@ -45,9 +45,10 @@ def symmetric_encrypt(msg, key):
     Returns:
         bytearray: A bytearray containing the ciphertext of the message encrypted with the key.
     """
-    iv = Random.new().read(AES.block_size)
-    cipher = AES.new(key, AES.MODE_CFB, iv)
-    return iv + cipher.encrypt(msg)
+    if msg and key:
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(key, AES.MODE_CFB, iv)
+        return iv + cipher.encrypt(msg)
 
 
 def symmetric_decrypt(ciphertext, key):
@@ -70,8 +71,9 @@ def symmetric_decrypt(ciphertext, key):
         bytearray: A bytearray containing the plaintext of the message that was decrypted.
 
     """
-    cipher = AES.new(key, AES.MODE_CFB, ciphertext[:AES.block_size])
-    return cipher.decrypt(ciphertext)[AES.block_size:]
+    if ciphertext and key:
+        cipher = AES.new(key, AES.MODE_CFB, ciphertext[:AES.block_size])
+        return cipher.decrypt(ciphertext)[AES.block_size:]
 
 
 def private_key_to_file(private_key, filepath):
@@ -333,6 +335,10 @@ def _asymmetric_encrypt_sign(plaintext, encrypt_key, sign_key):
         blocks.append(encrypt(plaintext[i:i + ENCRYPTION_BLOCK_SIZE], encrypt_key))
     ciphertext = b''.join(blocks)
     return ciphertext, signature
+
+
+def asymmetric_sign(plaintext, sign_key):
+    return sign(plaintext, sign_key, 'SHA-512')
 
 
 def asymmetric_encrypt_sign(plaintext, encrypt_key, sign_key):
