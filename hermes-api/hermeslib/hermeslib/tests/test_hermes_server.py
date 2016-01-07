@@ -1,7 +1,6 @@
 from twisted.test import proto_helpers
 from twisted.trial import unittest
 
-
 from hermeslib.server.hermes_server import *
 
 
@@ -11,9 +10,9 @@ class MyTestCase(unittest.TestCase):
     _server_public_key = public_key_from_file(
         'hermeslib/tests/testing_data/server_test_key_pub.pem')
     _client_private_key = private_key_from_file(
-        'hermeslib/tests/testing_data/client_test_key.pem')
+        'hermeslib/tests/testing_data/client1_test_key.pem')
     _client_public_key = public_key_from_file(
-        'hermeslib/tests/testing_data/client_test_key_pub.pem')
+        'hermeslib/tests/testing_data/client1_test_key_pub.pem')
 
     def test_connection_made(self):
         factory = HermesFactory(

@@ -9,9 +9,9 @@ class CryptoTestCase(unittest.TestCase):
     _pub_key1 = public_key_from_file(
         'hermeslib/tests/testing_data/server_test_key_pub.pem')
     _priv_key2 = private_key_from_file(
-        'hermeslib/tests/testing_data/client_test_key.pem')
+        'hermeslib/tests/testing_data/client1_test_key.pem')
     _pub_key2 = public_key_from_file(
-        'hermeslib/tests/testing_data/client_test_key_pub.pem')
+        'hermeslib/tests/testing_data/client1_test_key_pub.pem')
     # Tests integration with the Cryptographic library
 
     def test_symmetric_key_generation(self):

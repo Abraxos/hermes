@@ -22,7 +22,7 @@ LOGIN:<user public key>
 
 The login command does not have any parameters other than the payload and can therefore be interpreted by splitting on the `:` one time.
 
-The login command is special. Once a login command is sent, the session enters into a series of login states. For a high-level explanation for the reason behind this, please check out the High-Level Hermes Protocol Security Scheme document. The server responds with a message: `LOGIN_CHALLENGE:<challenge>` and the user must sign the challenge with their user private key (as opposed to the device private key that was used to establish the session). The client signs the challenge and sends a message of the format: `LOGIN_RESPONSE:<challenge signature>`. Assuming that the client's signature is valid, the server then replies with a `LOGIN_CHALLENGE_ACK` followed by the client sending a `LOGIN_USERNAME:<username>` message. If the username is valid, the server replies with `LOGIN_USERNAME_ACCEPT`, otherwise `LOGIN_USERNAME_REJECT`.
+The login command is special. Once a login command is sent, the session enters into a series of login states. For a high-level explanation for the reason behind this, please check out the High-Level Hermes Protocol Security Scheme document. The server responds with a message: `LOGIN_CHALLENGE:<challenge>` and the user must sign the challenge with their user private key (as opposed to the device private key that was used to establish the session). The client signs the challenge and sends a message of the format: `LOGIN_RESPONSE:<challenge signature>`. Assuming that the client's signature is valid, the server then replies with a `LOGIN_CHALLENGE_ACK:` followed by the client sending a `LOGIN_USERNAME:<username>` message. If the username is valid, the server replies with `LOGIN_USERNAME_ACCEPT:`, otherwise `LOGIN_USERNAME_REJECT:`.
 
 The following is an example login session between the server and client:
 
@@ -74,11 +74,23 @@ START_CONVERSATION_RESPONSE:<client B public key>:<challenge signature (by clien
 ##### Server to Client B
 
 ```
-START_CONVERSATION_RESPONSE:<client A public key>:<challenge signature (by client A)>:<conversation id>:<key signature (with A's private key) and key encrypted with B's public key>
+START_CONVERSATION_RESPONSE:<client A public key>:<challenge signature (by client A)>:<key signature (with A's private key) and key encrypted with B's public key>
+```
+
+##### Client B to Server
+
+```
+START_CONVERSATION_ACCEPT:<client A public key>:<conversation ID>
+```
+
+##### Server to Client A
+
+```
+START_CONVERSATION_ACCEPT:<client B public key>:<conversation ID>
 ```
 
 ### Converse
 
 ```
-CONVERSE:<conversation id>:
+CONVERSE:<conversation id>:<encrypted message>
 ```

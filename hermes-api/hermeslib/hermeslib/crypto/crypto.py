@@ -85,7 +85,7 @@ def private_key_to_file(private_key, filepath):
         None
     """
     with open(filepath, 'wb+') as f:
-        pk = PublicKey.save_pkcs1(private_key, format='PEM')
+        pk = PrivateKey.save_pkcs1(private_key, format='PEM')
         f.write(pk)
 
 
@@ -231,6 +231,19 @@ def asymmetric_decrypt_verify(ciphertext, decrypt_key, verify_key):
         log("WARNING: RSA Verification Failed. \n\tPLAINTEXT({0}): {1} \n\tSIGNATURE({2}): {3}".format(len(plaintext), plaintext, len(signature), signature))
     if signature and plaintext and verified:
         return plaintext
+
+def asymmetric_verify(signature, plaintext, verify_key):
+    """ TODO: Document
+
+    """
+    verified = False
+    try:
+        verified = verify(plaintext, signature, verify_key)
+    except TypeError:
+        log("Warning: TypeError has occurred during a verify. \n\tSIGNATURE({0}): {1}".format(len(signature),signature))
+    except pkcs1.VerificationError:
+        log("WARNING: RSA Verification Failed. \n\tPLAINTEXT({0}): {1} \n\tSIGNATURE({2}): {3}".format(len(plaintext), plaintext, len(signature), signature))
+    return verified
 
 def asymmetric_decrypt(ciphertext, decrypt_key):
     """ This function decrypts a message that was encrypted with an asymmetric cipher. In this case we use an RSA
