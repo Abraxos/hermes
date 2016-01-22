@@ -321,9 +321,9 @@ def _asymmetric_encrypt_sign(plaintext, encrypt_key, sign_key):
         ([   512 bytes   ][message]) [signature]
         Where the items in parenthesis are encrypted.
     Args:
-        param1 (bytearray): The plaintext message that is meant to be encrypted.
-        param2 (rsa.PublicKey): The key with which the message is to be encrypted, the public key of the recipient.
-        param3 (rsa.PrivateKey): The key with which the message is to be signed, the private key of the sender. 
+        plaintext (bytearray): The plaintext message that is meant to be encrypted.
+        encrypt_key (rsa.PublicKey): The key with which the message is to be encrypted, the public key of the recipient.
+        sign_key (rsa.PrivateKey): The key with which the message is to be signed, the private key of the sender.
     Returns:
         bytearray: A bytearray containing the ciphertext of the message pre-pended with the signature.
         bytearray: A bytearray containing the plaintext signature of the message.
