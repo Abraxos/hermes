@@ -6,12 +6,13 @@ In order to get Hermes running in a way to develop parts of it, there are severa
 
 Assuming you have cloned the hermes git repo. Run the following code starting from the hermes directory (i.e. the top-level directory in git).
 
-### Step 1: Setup VirtualEnv using VirtualEnvWrapper
+### Step 1: Setup VirtualEnv using VirtualEnvWrapper (and a couple of compilation tools)
 
 Install virtualenv and virtualenvwrapper like so:
 
 ```
 # apt-get install python-virtualenv virtualenvwrapper
+# apt-get install autoconf g++ python-dev python3-dev
 ```
 
 Create a new virtualenv in the `hermes/hermes-api/hermeslib/` directory
@@ -66,6 +67,7 @@ To install virtualenv and virtualenvwrapper on a Debian-based system, the follow
 ```
 # apt-get install virtualenv
 # apt-get install virtualenvwrapper
+# apt-get install autoconf g++ python-dev python3-dev
 ```
 
 ### Step 2: Setting Up a Virtual Environment

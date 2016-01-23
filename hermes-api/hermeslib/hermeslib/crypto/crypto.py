@@ -1,7 +1,7 @@
 from Crypto.Cipher import AES
 from Crypto import Random
 from Crypto.Hash import SHA256
-from rsa import verify, sign, encrypt, decrypt, PublicKey, PrivateKey, newkeys, pkcs1
+from rsa import verify, sign, encrypt, decrypt, PublicKey, PrivateKey, pkcs1
 
 
 from ..utils.logging import *
@@ -39,8 +39,8 @@ def symmetric_encrypt(msg, key):
         you should get the plaintext back without the IV.
     
     Args:
-        param1 (bytearray): The message that is to be encrypted.
-        param2 (bytearray): The key, length 32, with which the message is to be encrypted.
+        msg (bytearray): The message that is to be encrypted.
+        key (bytearray): The key, length 32, with which the message is to be encrypted.
 
     Returns:
         bytearray: A bytearray containing the ciphertext of the message encrypted with the key.
@@ -64,8 +64,8 @@ def symmetric_decrypt(ciphertext, key):
         The function uses these bytes to initialize the cipher object and then decrypt the message.
 
     Args:
-        param1 (bytearray): The ciphertext that needs to be decrypted.
-        param2 (bytearray): The key, length 32, with which the message is to be decrypted.
+        ciphertext (bytearray): The ciphertext that needs to be decrypted.
+        key (bytearray): The key, length 32, with which the message is to be decrypted.
 
     Returns:
         bytearray: A bytearray containing the plaintext of the message that was decrypted.
@@ -81,8 +81,8 @@ def private_key_to_file(private_key, filepath):
         will erase the contents of the file if it does exist.
 
     Args:
-        param1 (rsa.PrivateKey): The key that is to be written to the file.
-        param2 (string): A path to the file where you wish to write the key.
+        private_key (rsa.PrivateKey): The key that is to be written to the file.
+        filepath (string): A path to the file where you wish to write the key.
     Returns:
         None
     """
@@ -96,8 +96,8 @@ def public_key_to_file(public_key, filepath):
         will erase the contents of the file if it does exist.
 
     Args:
-        param1 (rsa.PublicKey): The key that is to be written to the file.
-        param2 (string): A path to the file where you wish to write the key.
+        public_key (rsa.PublicKey): The key that is to be written to the file.
+        filepath (string): A path to the file where you wish to write the key.
     Returns:
         None
     """
@@ -110,7 +110,7 @@ def public_key_from_file(filepath):
     """ Loads a public key from a given filepath.
 
     Args:
-        param1 (string): A path to the file which contains the public key in a PEM format.
+        filepath (string): A path to the file which contains the public key in a PEM format.
     Returns:
         rsa.PublicKey: The public key that results from reading the given file.
     """
@@ -123,7 +123,7 @@ def private_key_from_file(filepath):
     """ Loads a private key from a given filepath.
 
     Args:
-        param1 (string): A path to the file which contains the private key in a PEM format.
+        filepath (string): A path to the file which contains the private key in a PEM format.
     Returns:
         rsa.PrivateKey: The private key that results from reading the given file.
     """
@@ -132,15 +132,15 @@ def private_key_from_file(filepath):
     return pk
 
 
-def private_key_from_str(s):
+def private_key_from_str(private_key_str):
     """ Loads a private key from a given PEM-formatted string.
 
     Args:
-        param1 (bytearray): A byte string which contains the private key in a PEM format.
+        private_key_str (bytearray): A byte string which contains the private key in a PEM format.
     Returns:
         rsa.PrivateKey: The private key that results from reading the given file.
     """
-    return PrivateKey.load_pkcs1(s, format='PEM')
+    return PrivateKey.load_pkcs1(private_key_str, format='PEM')
 
 
 def public_key_to_str(public_key):
@@ -148,24 +148,24 @@ def public_key_to_str(public_key):
         database or transferred accross an internet connection.
 
     Args:
-        param1 (rsa.PublicKey): The key that is to be interpreted to a PEM-format string.
+        public_key (rsa.PublicKey): The key that is to be interpreted to a PEM-format string.
     Returns:
         bytearray: A string of bytes representing the key in PEM format.
     """
     return PublicKey.save_pkcs1(public_key, format='PEM')
 
 
-def public_key_from_str(s):
+def public_key_from_str(public_key_str):
     """ Interprets a PEM-formatted string into a PublicKey object.
 
     Args:
-        param1 (bytearray): The bytearray that represents the public key in a PEM format.
+        public_key_str (bytearray): The bytearray that represents the public key in a PEM format.
 
     Returns:
         rsa.PublicKey: The public key that is the result of interpreting the PEM-formatted bytearray.
 
     """
-    return PublicKey.load_pkcs1(s, format='PEM')
+    return PublicKey.load_pkcs1(public_key_str, format='PEM')
 
 
 def public_key_sha256(public_key):
@@ -176,7 +176,7 @@ def public_key_sha256(public_key):
     as the key in a dictionary of database rather than try to interpret the key as a string every time.
 
     Args:
-        param1 (rsa.PublicKey): The key that is to be interpreted to a PEM-format string.
+        public_key (rsa.PublicKey): The key that is to be interpreted to a PEM-format string.
     Returns:
         bytearray: A string of bytes representing the SHA256 hash of the public key.
     """
@@ -188,7 +188,7 @@ def private_key_to_str(private_key):
         database or transferred accross an internet connection.
 
     Args:
-        param1 (rsa.PublicKey): The key that is to be interpreted to a PEM-format string.
+        private_key (rsa.PrivateKey): The key that is to be interpreted to a PEM-format string.
     Returns:
         bytearray: A string of bytes representing the key in PEM format.
     """
@@ -199,7 +199,7 @@ def asymmetric_decrypt_verify(ciphertext, decrypt_key, verify_key):
     """ This function decrypts a message that was encrypted with an asymmetric cipher. In this case, we use an RSA 
         algorithm. This function returns the plaintext of the message from the ciphertext only if the message
         signature is valid. Specifically, this function expects the signature to be the first 512 bytes of the 
-        decrypted message, so once it aquires the plaintext, it extracts the signature. This function expects the
+        decrypted message, so once it acquires the plaintext, it extracts the signature. This function expects the
         ciphertext along with a key to be used for decryption (the recipient's public key) and the verification key
         (the sender's public key). It decrypts the ciphertext and then extracts the signature and verifies it. If the
         signature is verified then the function returns the decrypted message, otherwise it returns None and logs a 
@@ -207,11 +207,11 @@ def asymmetric_decrypt_verify(ciphertext, decrypt_key, verify_key):
         failure or a type error (when the wrong type is given in place of the ciphertext).
 
     Args:
-        param1 (bytearray): The ciphertext that is to be decrypted. For best results, this should be the ciphertext 
+        ciphertext (bytearray): The ciphertext that is to be decrypted. For best results, this should be the ciphertext
                             that was produced by the asymmetric_encrypt_sign() function. The ciphertext should be the
                             encrypted message with its signature of 512 bytes prepended to it before encryption.
-        param2 (rsa.PrivateKey): The private key object that should be used to decrypt the message.
-        param3 (rsa.PublicKey): The public key object that should be used to verify the signature of the message.
+        decrypt_key (rsa.PrivateKey): The private key object that should be used to decrypt the message.
+        verify_key (rsa.PublicKey): The public key object that should be used to verify the signature of the message.
     Returns:
         bytearray: The ciphertext if the message can be decrypted and verified, and None otherwise as well as logging
                    certain common types of errors.
@@ -226,26 +226,45 @@ def asymmetric_decrypt_verify(ciphertext, decrypt_key, verify_key):
         signature, plaintext = plaintext[:DECRYPTION_BLOCK_SIZE], plaintext[DECRYPTION_BLOCK_SIZE:]
         verified = verify(plaintext, signature, verify_key)
     except TypeError:
-        log("Warning: TypeError has occurred during a decrypt/verify. \n\tCIPHERTEXT({0}): {1}".format(len(ciphertext),ciphertext))
+        log("Warning: TypeError has occurred during a decrypt/verify. \n\tCIPHERTEXT({0}): {1}".format(len(ciphertext),
+                                                                                                       ciphertext))
     except pkcs1.DecryptionError:
         log("Warning: RSA Decryption Failed. \n\tCIPHERTEXT({0}): {1}".format(len(ciphertext), ciphertext))
     except pkcs1.VerificationError:
-        log("WARNING: RSA Verification Failed. \n\tPLAINTEXT({0}): {1} \n\tSIGNATURE({2}): {3}".format(len(plaintext), plaintext, len(signature), signature))
+        log("WARNING: RSA Verification Failed. \n\tPLAINTEXT({0}): {1} \n\tSIGNATURE({2}): {3}".format(len(plaintext),
+                                                                                                       plaintext,
+                                                                                                       len(signature),
+                                                                                                       signature))
     if signature and plaintext and verified:
         return plaintext
 
-def asymmetric_verify(signature, plaintext, verify_key):
-    """ TODO: Document
 
+def asymmetric_verify(signature, plaintext, verify_key):
+    """ This function verifies the signature (bytearray) of a message given the original plaintext (bytearray) and the
+        public key with which to verify the signature (rsa.PublicKey). The function returns true if the signature is
+        valid or false if the signature is invalid or if the type of input is incorrect.
+
+    Args:
+        signature (bytearray): The signature that needs to be verified.
+        plaintext (bytearray): The plaintext that has been signed.
+        verify_key (rsa.PublicKey): The private key object that should be used to verify the signature.
+    Returns:
+        bytearray: A byte array containing the plaintext of the message as long as the verification passes, and None
+                   otherwise.
     """
     verified = False
     try:
         verified = verify(plaintext, signature, verify_key)
     except TypeError:
-        log("Warning: TypeError has occurred during a verify. \n\tSIGNATURE({0}): {1}".format(len(signature),signature))
+        log("Warning: TypeError has occurred during a verify. \n\tSIGNATURE({0}): {1}".format(len(signature),
+                                                                                              signature))
     except pkcs1.VerificationError:
-        log("WARNING: RSA Verification Failed. \n\tPLAINTEXT({0}): {1} \n\tSIGNATURE({2}): {3}".format(len(plaintext), plaintext, len(signature), signature))
+        log("WARNING: RSA Verification Failed. \n\tPLAINTEXT({0}): {1} \n\tSIGNATURE({2}): {3}".format(len(plaintext),
+                                                                                                       plaintext,
+                                                                                                       len(signature),
+                                                                                                       signature))
     return verified
+
 
 def asymmetric_decrypt(ciphertext, decrypt_key):
     """ This function decrypts a message that was encrypted with an asymmetric cipher. In this case we use an RSA
@@ -260,10 +279,10 @@ def asymmetric_decrypt(ciphertext, decrypt_key):
         the public key contained in the message.
 
     Args:
-        param1 (bytearray): The ciphertext that is to be decrypted. For best results, this should be the ciphertext 
+        ciphertext (bytearray): The ciphertext that is to be decrypted. For best results, this should be the ciphertext
                             that was produced by the asymmetric_encrypt_sign() function. The ciphertext should be the
                             encrypted message with its signature of 512 bytes prepended to it before encryption.
-        param2 (rsa.PrivateKey): The private key object that should be used to decrypt the message.
+        decrypt_key (rsa.PrivateKey): The private key object that should be used to decrypt the message.
     """
     plaintext, signature = None, None
     try:
@@ -273,7 +292,8 @@ def asymmetric_decrypt(ciphertext, decrypt_key):
         plaintext = b''.join(blocks)
         signature, plaintext = plaintext[:DECRYPTION_BLOCK_SIZE], plaintext[DECRYPTION_BLOCK_SIZE:]
     except TypeError:
-        log("Warning: TypeError has occurred during a decrypt/verify. \n\tCIPHERTEXT({0}): {1}".format(len(ciphertext),ciphertext))
+        log("Warning: TypeError has occurred during a decrypt/verify. \n\tCIPHERTEXT({0}): {1}".format(len(ciphertext),
+                                                                                                       ciphertext))
     except pkcs1.DecryptionError:
         log("Warning: RSA Decryption Failed. \n\tCIPHERTEXT({0}): {1}".format(len(ciphertext), ciphertext))
     if plaintext and signature:
@@ -293,9 +313,9 @@ def asymmetric_decrypt_verify_public_key(ciphertext, decrypt_key):
         send a challenge to the client after this function.
 
     Args:
-        param1 (bytearray): The ciphertext that is to be decrypted. The decrypted message of this ciphertext needs to
-                            be the public key of the client with the signature of the public key prepended.
-        param2 (rsa.PrivateKey): The private key object that should be used to decrypt the message.
+        ciphertext (bytearray): The ciphertext that is to be decrypted. The decrypted message of this ciphertext needs
+                                to be the public key of the client with the signature of the public key prepended.
+        decrypt_key (rsa.PrivateKey): The private key object that should be used to decrypt the message.
     Returns:
         bytearray: A byte array containing the plaintext of the message as long as the verification passes, and None
                    otherwise.
@@ -306,7 +326,10 @@ def asymmetric_decrypt_verify_public_key(ciphertext, decrypt_key):
             public_key = PublicKey.load_pkcs1(plaintext, format='PEM')
             verify(plaintext, signature, public_key)
         except pkcs1.VerificationError:
-            log("WARNING: RSA Verification Failed. \n\tPLAINTEXT({0}): {1} \n\tSIGNATURE({2}): {3}".format(len(plaintext), plaintext, len(signature), signature))
+            log("WARNING: RSA Verification Failed\n\tPLAINTEXT({0}): {1} \n\tSIGNATURE({2}): {3}".format(len(plaintext),
+                                                                                                         plaintext,
+                                                                                                         len(signature),
+                                                                                                         signature))
             return None
         return plaintext
 
@@ -346,9 +369,9 @@ def asymmetric_encrypt_sign(plaintext, encrypt_key, sign_key):
         message and not the plaintext signature. This is the function you should probably be using.
 
     Args:
-        param1 (bytearray): The plaintext message that is meant to be encrypted.
-        param2 (rsa.PublicKey): The key with which the message is to be encrypted, the public key of the recipient.
-        param3 (rsa.PrivateKey): The key with which the message is to be signed, the private key of the sender. 
+        plaintext (bytearray): The plaintext message that is meant to be encrypted.
+        encrypt_key (rsa.PublicKey): The key with which the message is to be encrypted, the public key of the recipient.
+        sign_key (rsa.PrivateKey): The key with which the message is to be signed, the private key of the sender.
     Returns:
         bytearray: A bytearray containing the ciphertext of the message pre-pended with the signature.
     """
