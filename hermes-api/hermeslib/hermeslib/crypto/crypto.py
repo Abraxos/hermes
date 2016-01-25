@@ -7,7 +7,6 @@ from rsa import verify, sign, encrypt, decrypt, PublicKey, PrivateKey, pkcs1
 from ..utils.logging import *
 
 
-# TODO: Contact library maintainer and find out why these numbers are...
 ENCRYPTION_BLOCK_SIZE = 501
 DECRYPTION_BLOCK_SIZE = 512
 """ int: encryption and decryption block sizes
@@ -17,6 +16,10 @@ DECRYPTION_BLOCK_SIZE = 512
     not quite make sense as the library documentation clearly states that the encryption/decryption functions should
     handle input of the same size as the key without issue. We are using keys of size 4096. Hence the todo above.
 """
+
+
+def gen_random(num_bytes):
+    return Random.get_random_bytes(num_bytes)
 
 
 def gen_symmetric_key():
@@ -29,7 +32,7 @@ def gen_symmetric_key():
             bytearray: A byte array of size 32 containing secure, randomly generated bits that can be used as a key for
                        an AES256 cipher.
     """
-    return Random.get_random_bytes(32)
+    return gen_random(32)
 
 
 def symmetric_encrypt(msg, key):
@@ -168,6 +171,10 @@ def public_key_from_str(public_key_str):
     return PublicKey.load_pkcs1(public_key_str, format='PEM')
 
 
+def sha256(message):
+    return SHA256.new(message).hexdigest()
+
+
 def public_key_sha256(public_key):
     """ This function produces a string that represents the SHA256 hash of the public key. This SHA256 hash can be used
     as the ID of the public key and anyone associated with it, for example, in a dictionary of a database. This 
@@ -180,7 +187,7 @@ def public_key_sha256(public_key):
     Returns:
         bytearray: A string of bytes representing the SHA256 hash of the public key.
     """
-    return SHA256.new(public_key_to_str(public_key)).hexdigest()
+    return sha256(public_key_to_str(public_key))
 
 
 def private_key_to_str(private_key):

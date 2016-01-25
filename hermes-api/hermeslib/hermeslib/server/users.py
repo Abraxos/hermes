@@ -10,8 +10,11 @@ class User(object):
         self.protocols = {}
 
     def deliver_conversation_message(self, msg):
-        # TODO: Implement delivering of a conversation level message
-        pass
+        for protocol_id in self.protocols:
+            protocol = self.protocols[protocol_id]
+            if protocol.session:
+                protocol.session.send_message(msg)
+
 
 class UserList(object):
     def __init__(self, users = None):

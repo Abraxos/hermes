@@ -8,6 +8,12 @@ from ..server.server_session import *
 from ..server.users import *
 
 
+class ServerConversation(object):
+    def __init__(self, conversation_id):
+        self.id = conversation_id
+        self.participants = []
+
+
 class HermesProtocol(Protocol):
     class State(Enum):
         initial = 0
@@ -120,12 +126,15 @@ class HermesFactory(Factory):
         self.private_key = private_key
         self.public_key = public_key
         self.user_list = UserList()
+        self.conversations = {} # dict of conversations indexed by their ids
 
     def buildProtocol(self, address):
         return HermesProtocol(self)
 
     def add_client(self, pub_key, protocol):
         self.protocols[pub_key] = protocol
+
+    def deliver_conversation_message
 
 
 class HermesServer(object):

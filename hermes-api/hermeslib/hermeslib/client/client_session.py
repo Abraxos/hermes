@@ -14,6 +14,42 @@ class User(object):
         self.private_key = private_key
         self.username = username
 
+
+class ConversationMessage(object):
+    def __init__(self, index, timestamp, sha256, content):
+        self.index = index
+        self.timestamp = timestamp
+        self.id = sha256
+        self.content = content
+
+
+class Conversation(object):
+    class ConversationState(Enum):
+        initial = 0
+        challenging = 1
+        signing = 2
+        acknowledging_signature = 3
+        generating_key = 4
+        acknowledging_key = 5
+
+    def __init__(self, conversation_id=None):
+        self.users = {} # Dict of user objects indexed by id
+        self.key = None
+        self.messages = []
+        self.id = conversation_id if conversation_id else sha256(gen_random(32))
+        self.state = self.ConversationState.initial
+
+    def add_message(self, conversation_msg):
+        if conversation_msg.index > self.messages[-1].index:
+            self.messages.append(conversation_msg)
+        else:
+            for i in reversed(range(len(self.messages))):
+                msg = self.messages[i]
+                if conversation_msg.index > msg.index:
+                    self.messages.insert(i, conversation_msg)
+                    break
+
+
 class ClientSession(object):
     class State(Enum):
         initial = 0
@@ -30,18 +66,16 @@ class ClientSession(object):
         self.protocol = protocol
         self.user = None
         self.message_buffer = deque([])
+        self.login_state = None
+        self.conversations = {} # Dict containing conversation objects indexed by their ids
 
-    def login(self, username, public_key, private_key):
-        self.user = User(public_key, private_key, username)
-        self.login_state = self.LoginState.initial
-        self.send_message(b'LOGIN:' + public_key_to_str(self.user.public_key))
-
-    def _add_message(self,msg):
+    def _add_message(self, msg):
         # TODO: Database logging of messages goes here
         self.message_buffer.append(msg)
-        while (len(self.message_buffer) > MAX_NUM_SESS_MSG):
+        while len(self.message_buffer) > MAX_NUM_SESS_MSG:
             self.message_buffer.popleft()
 
+    # Functions for logging in
     def _handle_login_invalid_command(self, command, msg):
         log("CLIENT SESSION: Invalid login command from server.\n\tCOMMAND: {0}\n\tMESSAGE: {1}".format(command, msg))
         self.login_state = self.LoginState.failed
@@ -94,6 +128,24 @@ class ClientSession(object):
         else:
             self._handle_login_invalid_command(command, msg)
 
+    def login(self, username, public_key, private_key):
+        self.user = User(public_key, private_key, username)
+        self.login_state = self.LoginState.initial
+        self.send_message(b'LOGIN:' + public_key_to_str(self.user.public_key))
+
+    # Functions for starting a conversation
+    def start_conversation(self, other_client_public_key):
+        # Send a command to the server with a public key of the other client
+        new_conversation = Conversation()
+        new_conversation.conversation_state = new_conversation.ConversationState.initial
+        self.send_message([b'START_CONVERSATION',
+                           b':',
+                           new_conversation.id,
+                           b':',
+                           public_key_to_str(other_client_public_key)])
+        new_conversation.state = new_conversation.ConversationState.signing
+
+
     def handle_message(self, msg):
         if msg:
             log("CLIENT SESSION: Received:\n\t{0}".format(repr(msg)))
@@ -110,7 +162,8 @@ class ClientSession(object):
             elif command.startswith(b'START_CONVERSATION'):
                 # TODO: handle starting a conversation
                 if command == b'START_CONVERSATION':
-                    pass
+                    s = msg.split(b':', maxsplit=1)
+                    conversation_id, public_key_str = s[0], s[1]
                 elif command == b'START_CONVERSATION_CHALLENGE':
                     pass
                 elif command == b'START_CONVERSATION_RESPONSE':

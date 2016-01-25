@@ -13,6 +13,7 @@ MAX_NUM_SESS_MSG = 500
 class ServerSession(object):
     class State(Enum):
         initial = 0
+
     class LoginState(Enum):
         initial = 0
         verifying_challenge = 1
@@ -40,34 +41,15 @@ class ServerSession(object):
         log("SERVER SESSION({0}): WARNING - Unhandled session command.\n\t{1}\n\t{2}".format(self.protocol.peer, command, msg))
         self.send_message("UNHANDLED_COMMAND:")
 
-    def _handle_invalid_login_command(self, command, msg):
-        log("SERVER SESSION({0}): WARNING - Invalid login command.\n\t{1}:{2}".format(self.protocol.peer, command, msg))
-        self.send_message("LOGIN_COMMAND_INVALID:")
-        del self.login_state
-
-    def _handle_invalid_login_username(self, username):
-        log("SERVER SESSION({0}): WARNING - User attempted to login with invalid username.\n\tUSERNAME: {1}\n\tPUBLIC_KEY: {2}".format(self.protocol.peer, username, self.user_key))
-        self.send_message(b'LOGIN_USERNAME_INVALID:')
-        del self.login_state
-
-    def _handle_login_username_taken(self, username):
-        log("SERVER SESSION({0}): WARNING - User attempted to login with existing username.\n\tUSERNAME: {1}\n\tPUBLIC_KEY: {2}".format(self.protocol.peer, username, self.user_key))
-        self.send_message(b'LOGIN_USERNAME_TAKEN:')
-        del self.login_state
-
-    def _handle_login_challenge_failure(self, signature):
-        log("SERVER SESSION({0}): WARNING - Invalid challenge signature.\n\t{1}".format(self.protocol.peer, signature))
-        self.send_message(b'LOGIN_CHALLENGE_FAILURE')
-        del self.login_state
-
     def _valid_username(self, username):
         # TODO: Implement and document what a valid username should be
-        return True
+        return True if username else False
 
     def send_message(self, msg):
         log("SERVER SESSION({0}): Transmitting:\n\t{1}".format(self.protocol.peer, repr(msg)))
         self.protocol.send_session_message(msg)
 
+    # Functions for handling a user logging in
     def _handle_login_command(self, command, msg):
         # The login command requires its own sub-state because logging in is a multi-stage activity
         if command == b'LOGIN':
@@ -111,6 +93,41 @@ class ServerSession(object):
         else:
             self._handle_invalid_login_command(command, msg)
 
+    def _handle_invalid_login_command(self, command, msg):
+        log("SERVER SESSION({0}): WARNING - Invalid login command.\n\t{1}:{2}".format(self.protocol.peer, command, msg))
+        self.send_message("LOGIN_COMMAND_INVALID:")
+        del self.login_state
+
+    def _handle_invalid_login_username(self, username):
+        log("SERVER SESSION({0}): WARNING - User attempted to login with invalid username.\n\tUSERNAME: {1}\n\tPUBLIC_KEY: {2}".format(self.protocol.peer, username, self.user_key))
+        self.send_message(b'LOGIN_USERNAME_INVALID:')
+        del self.login_state
+
+    def _handle_login_username_taken(self, username):
+        log("SERVER SESSION({0}): WARNING - User attempted to login with existing username.\n\tUSERNAME: {1}\n\tPUBLIC_KEY: {2}".format(self.protocol.peer, username, self.user_key))
+        self.send_message(b'LOGIN_USERNAME_TAKEN:')
+        del self.login_state
+
+    def _handle_login_challenge_failure(self, signature):
+        log("SERVER SESSION({0}): WARNING - Invalid challenge signature.\n\t{1}".format(self.protocol.peer, signature))
+        self.send_message(b'LOGIN_CHALLENGE_FAILURE')
+        del self.login_state
+
+    def _handle_start_conversation_command(self, command, msg):
+        # TODO: handle starting a conversation
+        if command == b'START_CONVERSATION':
+            s = msg.split(b':', maxsplit=1)
+            conversation_id, public_key_str = s[0], s[1]
+            new_conversation = ServerConversation(conversation_id)
+        elif command == b'START_CONVERSATION_CHALLENGE':
+            pass
+        elif command == b'START_CONVERSATION_RESPONSE':
+            pass
+        elif command == b'START_CONVERSATION_ACCEPT':
+            pass
+        else:
+            self._unhandled_command(command, msg)
+
     def handle_message(self, msg):
         if msg:
             log("SERVER SESSION({0}): Received\n\t{1}".format(self.protocol.peer, repr(msg)))
@@ -118,25 +135,13 @@ class ServerSession(object):
 
             # Separate command from the rest of the message
             s = msg.split(b':', maxsplit=1)
-            time.sleep(5)
             command, msg = s[0], s[1]
 
             # Then depending on the command, get the parameters and payload
             if command.startswith(b'LOGIN'):
                 self._handle_login_command(command, msg)
-
             elif command.startswith(b'START_CONVERSATION'):
-                # TODO: handle starting a conversation
-                if command == b'START_CONVERSATION':
-                    pass
-                elif command == b'START_CONVERSATION_CHALLENGE':
-                    pass
-                elif command == b'START_CONVERSATION_RESPONSE':
-                    pass
-                elif command == b'START_CONVERSATION_ACCEPT':
-                    pass
-                else:
-                    self._unhandled_command(command, msg)
+                self._handle_start_conversation_command(command, msg)
             elif command == b'CONVERSE':
                 # TODO: handle conversation message
                 pass
