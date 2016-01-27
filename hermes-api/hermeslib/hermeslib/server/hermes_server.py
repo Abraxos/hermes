@@ -46,7 +46,8 @@ class HermesProtocol(Protocol):
         assert data
         key = key if key else self.session.key
         if not key:
-            log("SERVER WARNING: Attempted to send session message before session was established")
+            log("SERVER WARNING: Attempted to send session message before "
+                "session was established")
             return
         ciphertext = symmetric_encrypt(data, key)
         self.transport.write(ciphertext)
@@ -54,7 +55,8 @@ class HermesProtocol(Protocol):
     def _symmetric_decrypt(self, data, key=None):
         key = key if key else self.session.key
         if not key:
-            log("SERVER WARNING: Attempted to interpret session message before session was established")
+            log("SERVER WARNING: Attempted to interpret session message before "
+                "session was established")
             return
         plaintext = symmetric_decrypt(data, key)
         return plaintext
@@ -75,14 +77,15 @@ class HermesProtocol(Protocol):
         self._symmetric_encrypt_send(msg)
 
     def _initial_failure(self):
-        log("SERVER WARNING:[{0}]: Client sent invalid initial data.".format(self.peer))
+        log("SERVER WARNING:[{0}]: Client sent invalid initial data."
+            .format(self.peer))
         self.transport.write(b"Initial failure.")
         self.disconnect()
 
     def _handle_device_pubkey(self, data):
-        client_public_key_str = asymmetric_decrypt_verify_public_key(data, self.factory.private_key)
-        if client_public_key_str:
-            self.client_pub_key = public_key_from_str(client_public_key_str)
+        client_pubkey_str = decrypt_pubkey(data, self.factory.private_key)
+        if client_pubkey_str:
+            self.client_pub_key = public_key_from_str(client_pubkey_str)
             self.client_sha256 = public_key_sha256(self.client_pub_key)
             self.state = self.State.challenging
             log("SERVER: Challenging: {0}".format(repr(self.challenge)))
@@ -116,13 +119,14 @@ class HermesProtocol(Protocol):
             assert self.session
             self.session.handle_message(self._symmetric_decrypt(data))
         else:
-            log("SERVER WARNING:[{0}]: Protocol received message in an invalid state. Message Ignored.".format(self.peer))
+            log("SERVER WARNING:[{0}]: Protocol received message in an invalid "
+                "state. Message Ignored.".format(self.peer))
 
 
 class HermesFactory(Factory):
 
     def __init__(self, private_key, public_key):
-        self.protocols = {}  # dictionary of protocols indexed by the SHA256 of the public key of their user
+        self.protocols = {}  # dictionary of protocols indexed by id
         self.private_key = private_key
         self.public_key = public_key
         self.user_list = UserList()
@@ -134,14 +138,12 @@ class HermesFactory(Factory):
     def add_client(self, pub_key, protocol):
         self.protocols[pub_key] = protocol
 
-    def deliver_conversation_message
-
 
 class HermesServer(object):
-    def __init__(self, port, private_key_filepath, public_key_filepath):
+    def __init__(self, port, private_key_file_path, public_key_file_path):
         self.port = port
-        self.private_key = private_key_from_file(private_key_filepath)
-        self.public_key = public_key_from_file(public_key_filepath)
+        self.private_key = private_key_from_file(private_key_file_path)
+        self.public_key = public_key_from_file(public_key_file_path)
 
     def run(self):
         reactor.listenTCP(self.port, HermesFactory(self.private_key, self.public_key))

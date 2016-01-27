@@ -162,10 +162,12 @@ def public_key_from_str(public_key_str):
     """ Interprets a PEM-formatted string into a PublicKey object.
 
     Args:
-        public_key_str (bytearray): The bytearray that represents the public key in a PEM format.
+        public_key_str (bytearray): The bytearray that represents the public key
+                                    in a PEM format.
 
     Returns:
-        rsa.PublicKey: The public key that is the result of interpreting the PEM-formatted bytearray.
+        rsa.PublicKey: The public key that is the result of interpreting the
+                       PEM-formatted bytearray.
 
     """
     return PublicKey.load_pkcs1(public_key_str, format='PEM')
@@ -176,16 +178,21 @@ def sha256(message):
 
 
 def public_key_sha256(public_key):
-    """ This function produces a string that represents the SHA256 hash of the public key. This SHA256 hash can be used
-    as the ID of the public key and anyone associated with it, for example, in a dictionary of a database. This 
-    function exists because one cannot hash a public_key object directly, it needs to be turned into a string first. 
-    Its more efficient to use this function once and associate the result with the key somehow and then use this hash 
-    as the key in a dictionary of database rather than try to interpret the key as a string every time.
+    """ This function produces a string that represents the SHA256 hash of the
+    public key. This SHA256 hash can be used as the ID of the public key and
+    anyone associated with it, for example, in a dictionary of a database. This
+    function exists because one cannot hash a public_key object directly, it
+    needs to be turned into a string first. Its more efficient to use this
+    function once and associate the result with the key somehow and then use
+    this hash as the key in a dictionary of database rather than try to
+    interpret the key as a string every time.
 
     Args:
-        public_key (rsa.PublicKey): The key that is to be interpreted to a PEM-format string.
+        public_key (rsa.PublicKey): The key that is to be interpreted to a
+                                    PEM-format string.
     Returns:
-        bytearray: A string of bytes representing the SHA256 hash of the public key.
+        bytearray: A string of bytes representing the SHA256 hash of the public
+                  key.
     """
     return sha256(public_key_to_str(public_key))
 
@@ -309,7 +316,7 @@ def asymmetric_decrypt(ciphertext, decrypt_key):
         return None, None
 
 
-def asymmetric_decrypt_verify_public_key(ciphertext, decrypt_key):
+def decrypt_pubkey(ciphertext, decrypt_key):
     """ This is a variant of the asymmetric_decrypt_verify() function that is meant to be used to verify a public key
         that was signed by the associated private key. More specifically this function takes a bytearray containing the
         ciphertext of a public key and its prepended signature of 512 bytes. The function decrypts the ciphertext,
