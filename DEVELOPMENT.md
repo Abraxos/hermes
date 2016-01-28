@@ -109,13 +109,16 @@ In case you are using the PyCharm IDE with Hermes you can follow these steps to 
 
 3. In the list of interpreters you should find and select the virtualenv that you created vie the instructions above. Click "Apply" and "OK".
 
-4. Now you can right-click on any unit test function or class and select "Run 'Unittest ...'" from the context menu. It should fail the first time, but it will create an entry in the toolbar on the top right like so:
+4. Also set default test runner in Tools >> Python Integrated Tools
+![](Documentation/images/pycharm_default_test_runner.png)
+
+5. Now you can right-click on any unit test function or class and select "Run 'Unittest ...'" from the context menu. It should fail the first time, but it will create an entry in the toolbar on the top right like so:
 ![](Documentation/images/pycharm_run_configurations.png)
 
-5. You can click "Edit Configurations" and configure the unit test you just created like so: (note the Working directory set to `.../hermes/hermes-api/hermeslib`)
+6. You can click "Edit Configurations" and configure the unit test you just created like so: (note the Working directory set to `.../hermes/hermes-api/hermeslib`)
 ![](Documentation/images/pycharm_unit_test.png)
 
-6. Now you should be able to run that specific unit test via PyCharm's native interface without having to go to the terminal. It will also make PyCharm's syntax and import checking work correctly for the hermes environment. Two important things to note: First that you can play around with the unit test configuration settings and even expand them all the way to the class level (that inherits from TestCase), and second that I have not yet been able to find a configuration that correctly manages to execute all of the Hermes tests, so as of right now, these tests can only be executed on individual functions and classes. I will update this document once I have this figured out.
+7. Now you should be able to run that specific unit test via PyCharm's native interface without having to go to the terminal. It will also make PyCharm's syntax and import checking work correctly for the hermes environment. Two important things to note: First that you can play around with the unit test configuration settings and even expand them all the way to the class level (that inherits from TestCase), and second that I have not yet been able to find a configuration that correctly manages to execute all of the Hermes tests, so as of right now, these tests can only be executed on individual functions and classes. I will update this document once I have this figured out.
 
 ---
 
