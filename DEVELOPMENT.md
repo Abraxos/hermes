@@ -48,11 +48,47 @@ You can use the `setup.py` script to make sure that the package is ready to be p
 (hermeslib-dev)$ python setup.py develop
 ```
 
+#### Unit Testing
+
 And now you should be ready to program HermesLib. To run the unit tests, simply execute the following command from the `hermes/hermes-api/hermeslib` directory:
 
-```
+```bash
 (hermeslib-dev)$ python -m unittest discover -v
 ```
+
+You can run a specific test case or a specific test from a test case like so (The example shows how to run the Crypto test cases, but you can do the same thing with server and client test cases):
+
+```bash
+(hermeslib-dev)$ python -m unittest -v hermeslib.crypto.test_crypto.CryptoTestCase # Run all tests in the test case
+(hermeslib-dev)$ python -m unittest -v hermeslib.crypto.test_crypto.CryptoTestCase.test_symmetric_encryption_decryption # Run a single test
+(hermeslib-dev)$
+```
+
+#### Code Coverage
+
+If you are using coverage.py then you should be able to run unittests with coverage from the same directory as the unit tests and the same way that you would normally run unittests except with the `coverage` command instead of `python`:
+
+```bash
+(hermeslib-dev)$ coverage run -m unittest discover
+(hermeslib-dev)$ coverage -m unittest -v hermeslib.crypto.test_crypto.CryptoTestCase # Run all tests in the test case
+(hermeslib-dev)$ coverage -m unittest -v hermeslib.crypto.test_crypto.CryptoTestCase.test_symmetric_encryption_decryption # Run a single test
+```
+
+Coverage stores the results of its tests in .coverage files throughout the development directory. I've added the .coverage files to the .gitignore file so that no one accidentally commits them.
+
+You can view the commandline summary of the coverage results with the following command:
+
+```bash
+(hermeslib-dev)$ coverage report -m
+```
+
+And you can generate a much more detailed HTML version of the report with the following command, which will create htmlcov directories with html files inside your development directory that can be used to view the results in detail in your browser.
+
+```bash
+(hermeslib-dev)$ coverage html
+```
+
+#### Exiting
 
 To exit from the virtualenv simply execute the command:
 

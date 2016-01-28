@@ -3,3 +3,5 @@ __pycache__
 *~
 #*#
 _trial_temp
+.coverage
+htmlcov
