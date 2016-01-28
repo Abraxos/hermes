@@ -2,7 +2,7 @@ from enum import Enum
 from collections import deque
 from uuid import uuid1
 
-from ..utils.logging import *
+# from ..utils.logging import *
 from ..crypto.crypto import *
 
 
@@ -48,7 +48,7 @@ class ClientConversation(object):
         self.recipient = recipient
         self.id = conversation_id if conversation_id else uuid1().bytes
         self.state = self.State.initial
-        if self is initiator:
+        if self.me is initiator:
             self.conversation_state = self.State.initial
             msg = b':'.join([b'START_CONVERSATION', self.id,
                              recipient.public_key_str()])
@@ -57,6 +57,8 @@ class ClientConversation(object):
         else:
             self.state = self.State.challenging
             self.challenge = gen_random(32)
+            log("RECEIVED CONVERSATION REQUEST FROM: {0}"
+                .format(initiator.username))
             challenge = asymmetric_encrypt_sign(self.challenge,
                                                 initiator.public_key,
                                                 self.me.private_key)
@@ -68,75 +70,99 @@ class ClientConversation(object):
     def reject(self, msg):
         msg = b':'.join([b'START_CONVERSATION_REJECT', msg])
         self.session.send_message(msg)
+        self._halt()
+
+    def _handle_start_convo_key(self, msg):
+        assert self.me is self.recipient
+        if self.state is self.State.awaiting_key:
+            self.key = asymmetric_decrypt_verify(msg, self.me.private_key,
+                                                 self.initiator.public_key)
+            if self.key:
+                self.state = self.State.conversing
+            else:
+                log("REJECTING CONVERSATION: Invalid Key")
+                self.reject(b'Invalid key')
+        else:
+            log("REJECTING CONVERSATION: Unexpected Key")
+            self.reject(b'Unexpected Key')
+
+    def _handle_start_convo_accept(self):
+        assert self.me is self.initiator
+        if self.state is self.State.awaiting_verification:
+            self.key = gen_symmetric_key()
+            key = asymmetric_encrypt_sign(self.key,
+                                          self.recipient.public_key,
+                                          self.me.private_key)
+            msg = b':'.join([b'START_CONVERSATION_KEY', self.id, key])
+            self.session.send_message(msg)
+            self.state = self.State.conversing
+        else:
+            log("REJECTING CONVERSATION: Unexpected Accept")
+            self.reject(b'Unexpected Accept')
+
+    def _handle_start_conversation_response(self, msg):
+        assert self.me is self.recipient
+        if self.state is self.State.verifying_signature:
+            signature = asymmetric_decrypt_verify(msg, self.me.private_key,
+                                                  self.initiator.public_key)
+            if signature:
+                msg = b':'.join([b'START_CONVERSATION_ACCEPT', self.id])
+                self.session.send_message(msg)
+                self.state = self.State.awaiting_key
+            else:
+                log("REJECTING CONVERSATION: Failed Challenge")
+                self.reject(b'Failed Challenge')
+        else:
+            log("REJECTING CONVERSATION: Unexpected Challenge Response")
+            self.reject(b'Unexpected Challenge Response')
+
+    def _handle_start_conversation_challenge(self, msg):
+        assert self.me is self.initiator
+        if self.state is self.State.signing:
+            challenge = asymmetric_decrypt_verify(msg, self.me.private_key,
+                                                  self.recipient.public_key)
+            if challenge:
+                signature = asymmetric_sign(challenge, self.me.private_key)
+                r = asymmetric_encrypt_sign(signature,
+                                            self.recipient.public_key,
+                                            self.me.private_key)
+                msg = b':'.join([b'START_CONVERSATION_RESPONSE', self.id, r])
+                self.session.send_message(msg)
+                self.state = self.State.awaiting_verification
+            else:
+                log("REJECTING CONVERSATION: Failed Challenge Verification")
+                self.reject(b'Invalid challenge')
+        else:
+            log("REJECTING CONVERSATION: Unexpected Challenge")
+            self.reject(b'Unexpected Challenge')
+
+    def _unhandled_message(self, msg):
+        if self.state is self.State.conversing:
+            log("UNHANDLED CONVERSATION MESSAGE: {0}\n\tMSG: {1}\n\tINITIATOR: "
+                "{2}\n\tRECIPIENT: {3}".format(self.id, msg, self.initiator.id,
+                                               self.recipient.id))
+        else:
+            self._halt()
+
+    def _halt(self):
+        # TODO: Write a halt-conversation method that signals to the server not
+        # to forward anymore new messages to this client.
+        pass
 
     def handle_start_convo_cmd(self, cmd, msg):
         # TODO: Implement actual error handling
         if cmd == b'START_CONVERSATION_CHALLENGE':
-            assert self is self.initiator
-            if self.state is self.State.signing:
-                challenge = asymmetric_decrypt_verify(msg, self.me.private_key,
-                                                      self.recipient.public_key)
-                if challenge:
-                    signature = asymmetric_sign(challenge, self.me.private_key)
-                    r = asymmetric_encrypt_sign(signature,
-                                                self.recipient.public_key,
-                                                self.me.private_key)
-                    msg = b':'.join([b'START_CONVERSATION_RESPONSE', self.id, r])
-                    self.session.send_message(msg)
-                    self.state = self.State.awaiting_verification
-                else:
-                    log("REJECTING CONVERSATION: Failed Challenge Verification")
-                    self.reject(b'Invalid challenge')
-            else:
-                log("REJECTING CONVERSATION: Unexpected Challenge")
-                self.reject(b'Unexpected Challenge')
+            self._handle_start_conversation_challenge(msg)
         elif cmd == b'START_CONVERSATION_RESPONSE':
-            assert self is self.recipient
-            if self.state is self.State.verifying_signature:
-                signature = asymmetric_decrypt_verify(msg, self.me.private_key,
-                                                      self.recipient.public_key)
-                if signature:
-                    msg = b':'.join([b'START_CONVERSATION_ACCEPT', self.id])
-                    self.session.send_message(msg)
-                    self.state = self.State.awaiting_key
-                else:
-                    log("REJECTING CONVERSATION: Failed Challenge")
-                    self.reject(b'Failed Challenge')
-            else:
-                log("REJECTING CONVERSATION: Unexpected Challenge Response")
-                self.reject(b'Unexpected Challenge Response')
+            self._handle_start_conversation_response(msg)
         elif cmd == b'START_CONVERSATION_ACCEPT':
-            assert self is self.initiator
-            if self.state is self.State.awaiting_verification:
-                self.key = gen_symmetric_key()
-                key = asymmetric_encrypt_sign(self.key,
-                                              self.recipient.public_key,
-                                              self.me.private_key)
-                msg = b':'.join([b'START_CONVERSATION_KEY', self.id, key])
-                self.session.send_message(msg)
-                self.state = self.State.conversing
-            else:
-                log("REJECTING CONVERSATION: Unexpected Accept")
-                self.reject(b'Unexpected Accept')
+            self._handle_start_convo_accept()
         elif cmd == b'START_CONVERSATION_KEY':
-            assert self is self.recipient
-            if self.state is self.State.awaiting_key:
-                self.key = asymmetric_decrypt_verify(msg, self.me.private_key,
-                                                     self.initiator.public_key)
-                if self.key:
-                    self.state = self.State.conversing
-                else:
-                    log("REJECTING CONVERSATION: Invalid Key")
-                    self.reject(b'Invalid key')
-            else:
-                log("REJECTING CONVERSATION: Unexpected Key")
-                self.reject(b'Unexpected Key')
+            self._handle_start_convo_key(msg)
         elif cmd == b'START_CONVERSATION_REJECT':
-            # TODO: handle conversation rejection
-            pass
+            self._halt()
         else:
-            # TODO: handle unhandled messages
-            pass
+            self._unhandled_message(msg)
 
     def handle_msg(self, msg):
         pass
@@ -157,6 +183,7 @@ class ClientSession(object):
         self.key = key
         self.protocol = protocol
         self.user = None
+        self.users = {}
         self.message_buffer = deque([])
         self.login_state = None
         self.conversations = {}  # indexed by conversation GUIDs
@@ -210,22 +237,33 @@ class ClientSession(object):
         else:
             self._handle_login_invalid_command(command, msg)
 
+    def _unhandled_command(self, msg):
+        log("UNHANDLED COMMAND: {0}".format(msg))
+
     def login(self, username, public_key, private_key):
         self.user = User(public_key, private_key, username)
         self.login_state = self.LoginState.initial
         self.send_message(b'LOGIN:' + public_key_to_str(self.user.public_key))
 
+    def add_user(self, public_key, username=None):
+        new_user = User(public_key, username=username)
+        self.users[new_user.id] = new_user
+        return new_user
+
     # Functions for starting a conversation
     def start_convo(self, other_user):
         assert self.user is not None
-
+        log("STARTING CONVERSATION:\n\tINITIATOR: {0}({1})\n\tRECIPIENT: "
+            "{2}({3})".format(self.user.username, self.user.id,
+                              other_user.username, other_user.id))
         # Send a command to the server with a public key of the other client
         new_convo = ClientConversation(self, self.user, other_user)
         self.conversations[new_convo.id] = new_convo
+        return new_convo
 
     def handle_message(self, msg):
         if msg:
-            log("CLIENT SESSION: Received:\n\t{0}".format(repr(msg)))
+            log("CLIENT SESSION({0}): Received:\n\t{1}".format(self.user.username, repr(msg)))
             self._add_message(msg)
 
             # Separate command from the rest of the message
@@ -236,28 +274,37 @@ class ClientSession(object):
             if cmd.startswith(b'LOGIN'):
                 self._handle_login_command(cmd, msg)
             elif cmd.startswith(b'START_CONVERSATION'):
-                # TODO: handle starting a conversation
                 if cmd == b'START_CONVERSATION':
                     s = msg.split(b':', maxsplit=1)
                     convo_id, public_key_str = s[0], s[1]
-                    pubkey = public_key_from_str(public_key_str)
-                    initiator = User(pubkey)
+
+                    initiator_id = sha256(public_key_str)
+                    if initiator_id in self.users:
+                        initiator = self.users[initiator_id]
+                    else:
+                        initiator = User(public_key_from_str(public_key_str))
                     self.conversations[convo_id] = ClientConversation(self,
                                                                       initiator,
                                                                       self.user,
                                                                       convo_id)
                 else:
                     s = msg.split(b':', maxsplit=1)
-                    convo_id, msg = s[0], s[1]
+                    convo_id, msg = (s[0], s[1]) if len(s) == 2 else (s[0],
+                                                                      None)
                     self.conversations[convo_id].handle_start_convo_cmd(cmd,
                                                                         msg)
             elif cmd == b'CONVERSE':
                 s = msg.split(b':', maxsplit=1)
-                convo_id, msg = s[0], s[1]
+                convo_id, msg = (s[0], s[1]) if len(s) == 2 else (s[0], None)
                 self.conversations[convo_id].handle_msg(cmd, msg)
             else:
-                self._unhandled_command(cmd, msg)
+                self._unhandled_command(cmd + msg)
 
     def send_message(self, msg):
-        log("CLIENT SESSION: Transmitting:\n\t{0}".format(repr(msg)))
-        self.protocol.send_session_message(msg)
+        if self.user:
+            log("CLIENT SESSION({0}): Transmitting:\n\t{1}"
+                .format(self.user.username, repr(msg)))
+            self.protocol.send_session_message(msg)
+        else:
+            log("CLIENT SESSION: Transmitting:\n\t{0}".format(repr(msg)))
+            self.protocol.send_session_message(msg)

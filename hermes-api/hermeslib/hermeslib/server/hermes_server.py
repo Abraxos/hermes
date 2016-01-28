@@ -117,7 +117,8 @@ class HermesProtocol(Protocol):
             self._handle_challenge_signature(data)
         elif self.state == self.State.session:
             assert self.session
-            self.session.handle_message(self._symmetric_decrypt(data))
+            plaintext = self._symmetric_decrypt(data)
+            self.session.handle_message(plaintext)
         else:
             log("SERVER WARNING:[{0}]: Protocol received message in an invalid "
                 "state. Message Ignored.".format(self.peer))

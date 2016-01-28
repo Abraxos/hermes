@@ -20,7 +20,6 @@ class HermesClientProtocol(Protocol):
         self.factory = factory
         self.state = self.State.initial
         self.peer = None
-        self.conversations = {} # a dict of conversation objects indexed by conversation ID
         self.session = None
 
     def connectionMade(self):
@@ -34,6 +33,15 @@ class HermesClientProtocol(Protocol):
     def login(self, username, public_key, private_key):
         log("CLIENT: Logging in as: {0}".format(username))
         self.session.login(username, public_key, private_key)
+
+    def add_user(self, public_key, username=None):
+        # TODO: definitely need a coherent user-management scheme
+        assert self.session
+        return self.session.add_user(public_key, username)
+
+    def start_convo(self, with_user):
+        assert self.session
+        return self.session.start_convo(with_user)
 
     def _asymmetrically_signed_encrypted_write(self, data):
         ciphertext = asymmetric_encrypt_sign(data,
@@ -93,7 +101,8 @@ class HermesClientProtocol(Protocol):
             self._handle_session_key(data)
         elif self.state == self.State.session:
             assert self.session
-            self.session.handle_message(self._symmetric_decrypt(data))
+            plaintext = self._symmetric_decrypt(data)
+            self.session.handle_message(plaintext)
 
 
 class HermesClientFactory(ClientFactory):

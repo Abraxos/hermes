@@ -1,9 +1,9 @@
 from enum import Enum
 from collections import deque
-import time
-
-from ..utils.logging import *
-from ..crypto.crypto import *
+# import time
+#
+# from ..utils.logging import *
+# from ..crypto.crypto import *
 from ..server.users import *
 
 
@@ -17,6 +17,8 @@ class ServerConversation(object):
         self.initiator_session = session
         self.recipient_session = recipient.conversation_starter_session()
         self.users = {initiator.id: initiator, recipient.id: recipient}
+
+    def transmit_init_message(self, initiator):
         initiator_pubkey_str = initiator.public_key_str()
         msg = b':'.join([b'START_CONVERSATION', self.id, initiator_pubkey_str])
         self.recipient_session.send_message(msg)
@@ -40,7 +42,7 @@ class ServerConversation(object):
             self.recipient_session.send_message(msg)
         elif cmd == b'START_CONVERSATION_ACCEPT':
             assert session is self.recipient_session
-            msg = b':'.join([cmd, self.id, msg])
+            msg = b':'.join([cmd, self.id])
             self.initiator_session.send_message(msg)
         elif cmd == b'START_CONVERSATION_KEY':
             assert session is self.initiator_session
@@ -145,7 +147,7 @@ class ServerSession(object):
                 else:
                     self.user = User(self.user_key, username)
                     self.user.protocols[self.protocol.id()] = self.protocol
-                    self.protocol.factory.user_list.add(user)
+                    self.protocol.factory.user_list.add(self.user)
                     log("SERVER SESSION({0}): New User Login.\n\tUSERNAME: {1}"
                         "\n\tPUBLIC_KEY: {2}".format(self.protocol.peer,
                                                      username, self.user_key))
@@ -186,12 +188,16 @@ class ServerSession(object):
             s = msg.split(b':', maxsplit=1)
             convo_id, public_key_str = s[0], s[1]
             recipient = self.user_list().get_user_by_id(sha256(public_key_str))
-            self.conversations[convo_id] = ServerConversation(convo_id,
-                                                              self.user,
-                                                              recipient)
+            new_convo = ServerConversation(convo_id, self, self.user, recipient)
+            # Add the conversation to this session's list
+            self.conversations[convo_id] = new_convo
+            # Add the conversation to the recipient session's list
+            new_convo.recipient_session.conversations[convo_id] = new_convo
+            new_convo.transmit_init_message(self.user)
         else:
             s = msg.split(b':', maxsplit=1)
-            convo_id, msg = s[0], s[1]
+            assert len(s) == 2 or len(s) == 1
+            convo_id, msg = (s[0], s[1]) if len(s) == 2 else (s[0], None)
             self.conversations[convo_id].handle_start_convo_cmd(self, cmd, msg)
 
     def handle_message(self, msg):

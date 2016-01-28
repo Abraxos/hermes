@@ -191,3 +191,36 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(server_b.session.message_buffer[-1], b'LOGIN_USERNAME:Jonathan')
         self.assertEqual(client_b.session.message_buffer[-1], b'LOGIN_USERNAME_ACCEPT:')
 
+        jonathan = client_a.add_user(self._user2_public_key, b'Jonathan')
+        eugene = client_b.add_user(self._user1_public_key, b'Eugene')
+
+        client_a_convo = client_a.start_convo(jonathan)
+        m = server_a_transport.value()
+        server_a_transport.clear()
+        # A(START_CONVERSATION)->S(START_CONVERSATION)->B
+        m = send_receive(server_a, server_b_transport, m)
+        # S(START_CONVERSATION)->B(START_CONVERSATION_CHALLENGE)->S
+        m = send_receive(client_b, server_b_transport, m)
+        # B(START_CONVERSATION_CHALLENGE)->S(START_CONVERSATION_CHALLENGE)->A
+        m = send_receive(server_b, server_a_transport, m)
+        # S(START_CONVERSATION_CHALLENGE)->A(START_CONVERSATION_RESPONSE)->S
+        m = send_receive(client_a, server_a_transport, m)
+        # A(START_CONVERSATION_RESPONSE)->S(START_CONVERSATION_RESPONSE)->B
+        m = send_receive(server_a, server_b_transport, m)
+        # S(START_CONVERSATION_RESPONSE)->B(START_CONVERSATION_ACCEPT)->S
+        m = send_receive(client_b, server_b_transport, m)
+        # B(START_CONVERSATION_ACCEPT)->S(START_CONVERSATION_ACCEPT)->A
+        m = send_receive(server_b, server_a_transport, m)
+        # S(START_CONVERSATION_ACCEPT)->A(START_CONVERSATION_KEY)->S
+        m = send_receive(client_a, server_a_transport, m)
+        # A(START_CONVERSATION_KEY)->S(START_CONVERSATION_KEY)->B
+        m = send_receive(server_a, server_b_transport, m)
+        # S(START_CONVERSATION_KEY)->B
+        send_receive(client_b, server_b_transport, m)
+
+        client_b_convo = client_b.session.conversations[client_a_convo.id]
+
+        self.assertEqual(client_b_convo.state, client_b_convo.State.conversing)
+        self.assertEqual(client_a_convo.state, client_a_convo.State.conversing)
+
+        self.assertEqual(client_a_convo.key, client_b_convo.key)
