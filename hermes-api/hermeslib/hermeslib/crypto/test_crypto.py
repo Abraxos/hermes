@@ -1,6 +1,6 @@
 import unittest
 # from rsa import verify, sign, encrypt, decrypt, PublicKey, PrivateKey, newkeys
-from ..crypto.crypto import *
+from hermeslib.crypto.crypto import *
 
 
 class CryptoTestCase(unittest.TestCase):

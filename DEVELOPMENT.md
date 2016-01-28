@@ -34,6 +34,12 @@ $ workon hermeslib-dev
 (hermeslib-dev)$ pip install twisted pycrypto sqlalchemy rsa pastescript
 ```
 
+If you plan on running unit tests, you probably want to have code-coverage tools so make sure to install coverage as well in your development environment:
+
+```
+(hermeslib-dev)$ pip install coverage
+```
+
 ### Step 3: Develop the Package
 
 You can use the `setup.py` script to make sure that the package is ready to be programmed against. I believe you should execute this command every time you pull from hermes to make sure that everything is up-to-date in the package metadata.
