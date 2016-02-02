@@ -80,16 +80,29 @@ class CryptoTestCase(unittest.TestCase):
     def test_private_key_to_file(self):
         # The resulting files from writing the same key to both of them should
         # be the same
+        priv_keys = [self._priv_key1, self._priv_key2]
         path1 = 'hermeslib/tests/testing_data/test_priv_key_to_file1.pem'
         path2 = 'hermeslib/tests/testing_data/test_priv_key_to_file2.pem'
-        private_key_to_file(self._priv_key1, path1)
-        private_key_to_file(self._priv_key1, path2)
-        self.assertTrue(filecmp.cmp(path1, path2))
+        for key in priv_keys:
+            private_key_to_file(key, path1)
+            private_key_to_file(key, path2)
+            self.assertTrue(filecmp.cmp(path1, path2))
 
-        # Even when one of them is overwritten
-        private_key_to_file(self._priv_key1, path2)
-        self.assertTrue(filecmp.cmp(path1, path2))
+            # Even when one of them is overwritten
+            private_key_to_file(key, path2)
+            self.assertTrue(filecmp.cmp(path1, path2))
 
+    def test_public_key_to_file(self):
+        pub_keys = [self._pub_key1, self._pub_key2]
+        path1 = 'hermeslib/tests/testing_data/test_pub_key_to_file1.pem'
+        path2 = 'hermeslib/tests/testing_data/test_pub_key_to_file2.pem'
+        for key in pub_keys:
+            public_key_to_file(key, path1)
+            public_key_to_file(key, path2)
+            self.assertTrue(filecmp.cmp(path1, path2))
+
+            public_key_to_file(key, path2)
+            self.assertTrue(filecmp.cmp(path1, path2))
 
 
 if __name__ == '__main__':
