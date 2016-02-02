@@ -1,6 +1,7 @@
 import unittest
 import filecmp
 # from rsa import verify, sign, encrypt, decrypt, PublicKey, PrivateKey, newkeys
+from hermeslib.crypto import crypto
 from hermeslib.crypto.crypto import *
 
 
@@ -125,14 +126,53 @@ class CryptoTestCase(unittest.TestCase):
     def test_sha(self):
         self.assertEqual(len(public_key_sha256(self._pub_key1)), 64)
         self.assertEqual(len(public_key_sha256(self._pub_key2)), 64)
-        self.assertEqual(len(sha256(b'salutations world')), 64)
+        self.assertEqual(len(sha256(bytearray(b'salutations world'))), 64)
         self.assertEqual(
-            len(sha256(b'''Like most North Americans of his generation, Hal
+            len(sha256(bytearray(b'''Like most North Americans of his generation, Hal
                        tends to know way less about why he feels certain ways
                        about the objects and pursuits he's devoted to than he
                        does about the objects and pursuits themselves. It's
                        hard to say for sure whether this is even exceptionally
-                       bad, this tendency.''')), 64)
+                       bad, this tendency.'''))), 64)
+
+    def test_asymmetric_sign(self):
+        # TODO: test asymmetric_sign
+        pass
+
+    def test_asymmetric_verify(self):
+        pub_keys = [self._pub_key1, self._pub_key2]
+        priv_keys = [self._priv_key1, self._priv_key2]
+        original_plaintext = b'''I do things like get in a taxi and say, \'The
+                             library, and step on it.\''''
+
+        # The enumeration assumes both key lists are of same size and the index
+        # of one list holds a key that corresponds to the same index of the
+        # other list.
+        for i, pub_key in enumerate(pub_keys):
+            priv_key = priv_keys[i]
+            ciphertext, original_signature = crypto._asymmetric_encrypt_sign(
+                original_plaintext, pub_key, priv_key)
+            plaintext, signature = asymmetric_decrypt(ciphertext, priv_key)
+            self.assertEqual(original_plaintext, plaintext)
+            self.assertEqual(original_signature, signature)
+            self.assertTrue(asymmetric_verify(signature, plaintext, pub_key))
+
+            for other_priv_key in priv_keys:
+                if other_priv_key != priv_key:
+                    # making sure other private keys don't work if they are not
+                    # equal
+                    other_ciphtext, other_sig = crypto._asymmetric_encrypt_sign(
+                        original_plaintext, pub_key, other_priv_key)
+                    self.assertNotEqual(other_ciphtext, ciphertext)
+                    self.assertNotEqual(other_sig, signature)
+
+                    # self.assertFalse(asymmetric_verify(
+                    #     other_sig, original_plaintext, other_priv_key))
+
+                    self.assertFalse(asymmetric_verify(
+                        other_sig, original_plaintext, priv_key))
+                    self.assertFalse(asymmetric_verify(
+                        signature, original_plaintext, other_priv_key))
 
 
 if __name__ == '__main__':
