@@ -55,16 +55,30 @@ class CryptoTestCase(unittest.TestCase):
         self.assertEqual(msg, deciphered)
 
     def test_asymmetric_import_export(self):
-        rsa_key_str = private_key_to_str(self._priv_key1)
-        pub_key_str = public_key_to_str(self._pub_key1)
-        self.assertEqual(pub_key_str[:30], b'-----BEGIN RSA PUBLIC KEY-----')
-        self.assertEqual(rsa_key_str[:31], b'-----BEGIN RSA PRIVATE KEY-----')
-        pub_suffix = b'-----END RSA PUBLIC KEY-----\n'
-        rsa_suffix = b'-----END RSA PRIVATE KEY-----\n'
-        self.assertEqual(pub_key_str[len(pub_key_str) - len(pub_suffix):], pub_suffix)
-        self.assertEqual(rsa_key_str[len(rsa_key_str) - len(rsa_suffix):], rsa_suffix)
-        priv_key = private_key_from_str(rsa_key_str)
-        pub_key = public_key_from_str(pub_key_str)
+        # test public keys
+        test_pub_keys = [self._pub_key1, self._pub_key2]
+        for key in test_pub_keys:
+            pub_key_str = public_key_to_str(key)
+            self.assertEqual(pub_key_str[:30], b'-----BEGIN RSA PUBLIC KEY-----')
+            pub_suffix = b'-----END RSA PUBLIC KEY-----\n'
+            self.assertEqual(pub_key_str[len(pub_key_str) - len(pub_suffix):],
+                             pub_suffix)
+            # make sure that key->string functions work as intended
+            self.assertEqual(public_key_to_str(public_key_from_str(pub_key_str)),
+                             pub_key_str)
+
+        # now test private keys
+        test_priv_keys = [self._priv_key1, self._priv_key2]
+        for key in test_priv_keys:
+            rsa_key_str = private_key_to_str(key)
+            self.assertEqual(rsa_key_str[:31],
+                             b'-----BEGIN RSA PRIVATE KEY-----')
+            rsa_suffix = b'-----END RSA PRIVATE KEY-----\n'
+            self.assertEqual(rsa_key_str[len(rsa_key_str) - len(rsa_suffix):],
+                             rsa_suffix)
+            self.assertEqual(
+                private_key_to_str(private_key_from_str(rsa_key_str)),
+                rsa_key_str)
 
     def test_asymmetric_key_encryption(self):
         key = gen_symmetric_key()
@@ -82,8 +96,8 @@ class CryptoTestCase(unittest.TestCase):
             self.assertEqual(sample_num, len(gen_random(sample_num)))
 
     def test_private_key_to_file(self):
-        # The resulting files from writing the same key to both of them should
-        # be the same
+        """ Resulting files from writing same key to both should be the same
+        """
         priv_keys = [self._priv_key1, self._priv_key2]
         path1 = 'hermeslib/tests/testing_data/test_priv_key_to_file1.pem'
         path2 = 'hermeslib/tests/testing_data/test_priv_key_to_file2.pem'
