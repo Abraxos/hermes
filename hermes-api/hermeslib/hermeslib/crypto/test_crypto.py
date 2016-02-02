@@ -1,4 +1,5 @@
 import unittest
+import filecmp
 # from rsa import verify, sign, encrypt, decrypt, PublicKey, PrivateKey, newkeys
 from hermeslib.crypto.crypto import *
 
@@ -70,6 +71,25 @@ class CryptoTestCase(unittest.TestCase):
         deciphered = asymmetric_decrypt_verify(
             ciphertext, self._priv_key2, self._pub_key1)
         self.assertEqual(key, deciphered)
+
+    def test_gen_random(self):
+        samples = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+        for sample_num in samples:
+            self.assertEqual(sample_num, len(gen_random(sample_num)))
+
+    def test_private_key_to_file(self):
+        # The resulting files from writing the same key to both of them should
+        # be the same
+        path1 = 'hermeslib/tests/testing_data/test_priv_key_to_file1.pem'
+        path2 = 'hermeslib/tests/testing_data/test_priv_key_to_file2.pem'
+        private_key_to_file(self._priv_key1, path1)
+        private_key_to_file(self._priv_key1, path2)
+        self.assertTrue(filecmp.cmp(path1, path2))
+
+        # Even when one of them is overwritten
+        private_key_to_file(self._priv_key1, path2)
+        self.assertTrue(filecmp.cmp(path1, path2))
+
 
 
 if __name__ == '__main__':
