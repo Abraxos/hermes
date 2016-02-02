@@ -166,7 +166,15 @@ class CryptoTestCase(unittest.TestCase):
                     self.assertNotEqual(other_ciphtext, ciphertext)
                     self.assertNotEqual(other_sig, signature)
 
-                    # self.assertFalse(asymmetric_verify(
+                    # TODO (Henry, @Eugene):
+                    # The below assertion CHECKS OUT, but I have a problem
+                    # understanding why. Basically, after asymmetrically encrypting
+                    # and signing a plaintext with non-matching pub and priv
+                    # keys, the signature received (other_sig) seems to be a
+                    # valid one. Because, in below, it is then passed into
+                    # the verify function along with the non-matching private
+                    # key and the verification checks out as True.
+                    # self.assertTrue(asymmetric_verify(
                     #     other_sig, original_plaintext, other_priv_key))
 
                     self.assertFalse(asymmetric_verify(
