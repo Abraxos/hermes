@@ -63,7 +63,7 @@ class CryptoTestCase(unittest.TestCase):
             pub_suffix = b'-----END RSA PUBLIC KEY-----\n'
             self.assertEqual(pub_key_str[len(pub_key_str) - len(pub_suffix):],
                              pub_suffix)
-            # make sure that key->string functions work as intended
+            # make sure that the reversals work as intended
             self.assertEqual(public_key_to_str(public_key_from_str(pub_key_str)),
                              pub_key_str)
 
@@ -121,6 +121,18 @@ class CryptoTestCase(unittest.TestCase):
 
             public_key_to_file(key, path2)
             self.assertTrue(filecmp.cmp(path1, path2))
+
+    def test_sha(self):
+        self.assertEqual(len(public_key_sha256(self._pub_key1)), 64)
+        self.assertEqual(len(public_key_sha256(self._pub_key2)), 64)
+        self.assertEqual(len(sha256(b'salutations world')), 64)
+        self.assertEqual(
+            len(sha256(b'''Like most North Americans of his generation, Hal
+                       tends to know way less about why he feels certain ways
+                       about the objects and pursuits he's devoted to than he
+                       does about the objects and pursuits themselves. It's
+                       hard to say for sure whether this is even exceptionally
+                       bad, this tendency.''')), 64)
 
 
 if __name__ == '__main__':
