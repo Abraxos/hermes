@@ -59,6 +59,10 @@ class CryptoTestCase(unittest.TestCase):
         pub_key_str = public_key_to_str(self._pub_key1)
         self.assertEqual(pub_key_str[:30], b'-----BEGIN RSA PUBLIC KEY-----')
         self.assertEqual(rsa_key_str[:31], b'-----BEGIN RSA PRIVATE KEY-----')
+        pub_suffix = b'-----END RSA PUBLIC KEY-----\n'
+        rsa_suffix = b'-----END RSA PRIVATE KEY-----\n'
+        self.assertEqual(pub_key_str[len(pub_key_str) - len(pub_suffix):], pub_suffix)
+        self.assertEqual(rsa_key_str[len(rsa_key_str) - len(rsa_suffix):], rsa_suffix)
         priv_key = private_key_from_str(rsa_key_str)
         pub_key = public_key_from_str(pub_key_str)
 
