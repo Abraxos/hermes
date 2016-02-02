@@ -388,7 +388,7 @@ def asymmetric_decrypt(ciphertext, decrypt_key):
             blocks.append(decrypt(ciphertext[i:i + DECRYPTION_BLOCK_SIZE], 
                                   decrypt_key))
         plaintext = b''.join(blocks)
-        signature, plaintext = plaintext[:DECRYPTION_BLOCK_SIZE], 
+        signature, plaintext = plaintext[:DECRYPTION_BLOCK_SIZE], \
                                plaintext[DECRYPTION_BLOCK_SIZE:]
     except TypeError:
         log("Warning: TypeError has occurred during a decrypt/verify. \n\t"
