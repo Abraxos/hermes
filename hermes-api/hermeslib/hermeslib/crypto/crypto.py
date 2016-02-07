@@ -142,7 +142,8 @@ def public_key_from_file(filepath):
     """ Loads a public key from a given filepath.
 
     Args:
-        filepath (string): A path to the file which contains the public key in a PEM format.
+        filepath (string): A path to the file which contains the public key in 
+                          a PEM format.
     Returns:
         rsa.PublicKey: The public key that results from reading the given file.
     """
@@ -294,20 +295,21 @@ def asymmetric_decrypt_verify(ciphertext, decrypt_key, verify_key):
     try:
         blocks = []
         for i in range(0, len(ciphertext), DECRYPTION_BLOCK_SIZE):
-            blocks.append(decrypt(ciphertext[i:i + DECRYPTION_BLOCK_SIZE], decrypt_key))
+            blocks.append(decrypt(ciphertext[i:i + DECRYPTION_BLOCK_SIZE], 
+                decrypt_key))
         plaintext = b''.join(blocks)
         signature, plaintext = plaintext[:DECRYPTION_BLOCK_SIZE], plaintext[DECRYPTION_BLOCK_SIZE:]
         verified = verify(plaintext, signature, verify_key)
     except TypeError:
-        log("Warning: TypeError has occurred during a decrypt/verify. \n\tCIPHERTEXT({0}): {1}".format(len(ciphertext),
-                                                                                                       ciphertext))
+        log("Warning: TypeError has occurred during a decrypt/verify.\n\t"
+            "CIPHERTEXT({0}): {1}".format(len(ciphertext), ciphertext))
     except pkcs1.DecryptionError:
-        log("Warning: RSA Decryption Failed. \n\tCIPHERTEXT({0}): {1}".format(len(ciphertext), ciphertext))
+        log("Warning: RSA Decryption Failed. \n\tCIPHERTEXT({0}): {1}"
+            .format(len(ciphertext), ciphertext))
     except pkcs1.VerificationError:
-        log("WARNING: RSA Verification Failed. \n\tPLAINTEXT({0}): {1} \n\tSIGNATURE({2}): {3}".format(len(plaintext),
-                                                                                                       plaintext,
-                                                                                                       len(signature),
-                                                                                                       signature))
+        log("WARNING: RSA Verification Failed. \n\tPLAINTEXT({0}): {1} \n\t"
+            "SIGNATURE({2}): {3}".format(len(plaintext), plaintext, 
+                                         len(signature), signature))
     if signature and plaintext and verified:
         return plaintext
 

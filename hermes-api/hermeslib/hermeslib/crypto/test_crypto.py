@@ -59,14 +59,14 @@ class CryptoTestCase(unittest.TestCase):
         # test public keys
         test_pub_keys = [self._pub_key1, self._pub_key2]
         for key in test_pub_keys:
-            pub_key_str = public_key_to_str(key)
-            self.assertEqual(pub_key_str[:30], b'-----BEGIN RSA PUBLIC KEY-----')
+            pub_key_s = public_key_to_str(key)
+            self.assertEqual(pub_key_s[:30], b'-----BEGIN RSA PUBLIC KEY-----')
             pub_suffix = b'-----END RSA PUBLIC KEY-----\n'
-            self.assertEqual(pub_key_str[len(pub_key_str) - len(pub_suffix):],
+            self.assertEqual(pub_key_s[len(pub_key_s) - len(pub_suffix):],
                              pub_suffix)
             # make sure that the reversals work as intended
-            self.assertEqual(public_key_to_str(public_key_from_str(pub_key_str)),
-                             pub_key_str)
+            self.assertEqual(public_key_to_str(public_key_from_str(pub_key_s)),
+                             pub_key_s)
 
         # now test private keys
         test_priv_keys = [self._priv_key1, self._priv_key2]
@@ -128,12 +128,12 @@ class CryptoTestCase(unittest.TestCase):
         self.assertEqual(len(public_key_sha256(self._pub_key2)), 64)
         self.assertEqual(len(sha256(bytearray(b'salutations world'))), 64)
         self.assertEqual(
-            len(sha256(bytearray(b'''Like most North Americans of his generation, Hal
-                       tends to know way less about why he feels certain ways
-                       about the objects and pursuits he's devoted to than he
-                       does about the objects and pursuits themselves. It's
-                       hard to say for sure whether this is even exceptionally
-                       bad, this tendency.'''))), 64)
+            len(sha256(bytearray(b'''Like most North Americans of his 
+                       generation, Hal tends to know way less about why he feels
+                       certain ways about the objects and pursuits he's devoted
+                       to than he does about the objects and pursuits
+                       themselves. It's hard to say for sure whether this is
+                       even exceptionally bad, this tendency.'''))), 64)
 
     def test_asymmetric_sign(self):
         # TODO: test asymmetric_sign
@@ -166,21 +166,14 @@ class CryptoTestCase(unittest.TestCase):
                     self.assertNotEqual(other_ciphtext, ciphertext)
                     self.assertNotEqual(other_sig, signature)
 
-                    # TODO (Henry, @Eugene):
-                    # The below assertion CHECKS OUT, but I have a problem
-                    # understanding why. Basically, after asymmetrically encrypting
-                    # and signing a plaintext with non-matching pub and priv
-                    # keys, the signature received (other_sig) seems to be a
-                    # valid one. Because, in below, it is then passed into
-                    # the verify function along with the non-matching private
-                    # key and the verification checks out as True.
-                    # self.assertTrue(asymmetric_verify(
-                    #     other_sig, original_plaintext, other_priv_key))
-
-                    self.assertFalse(asymmetric_verify(
-                        other_sig, original_plaintext, priv_key))
-                    self.assertFalse(asymmetric_verify(
-                        signature, original_plaintext, other_priv_key))
+                    for other_pub_key in pub_keys:
+                        if other_pub_key != pub_key:
+                            self.assertTrue(asymmetric_verify(
+                                other_sig, original_plaintext, other_pub_key))
+                            self.assertFalse(asymmetric_verify(
+                                other_sig, original_plaintext, pub_key))
+                            self.assertFalse(asymmetric_verify(
+                                signature, original_plaintext, other_pub_key))
 
 
 if __name__ == '__main__':

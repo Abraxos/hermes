@@ -66,12 +66,12 @@ You can run a specific test case or a specific test from a test case like so (Th
 
 #### Code Coverage
 
-If you are using coverage.py then you should be able to run unittests with coverage from the same directory as the unit tests and the same way that you would normally run unittests except with the `coverage` command instead of `python`:
+If you are using coverage.py then you should be able to run unittests with coverage from the same directory as the unit tests and the same way that you would normally run unittests except with the `coverage run` command instead of `python`:
 
 ```bash
 (hermeslib-dev)$ coverage run -m unittest discover
-(hermeslib-dev)$ coverage -m unittest -v hermeslib.crypto.test_crypto.CryptoTestCase # Run all tests in the test case
-(hermeslib-dev)$ coverage -m unittest -v hermeslib.crypto.test_crypto.CryptoTestCase.test_symmetric_encryption_decryption # Run a single test
+(hermeslib-dev)$ coverage run -m unittest -v hermeslib.crypto.test_crypto.CryptoTestCase # Run all tests in the test case
+(hermeslib-dev)$ coverage run -m unittest -v hermeslib.crypto.test_crypto.CryptoTestCase.test_symmetric_encryption_decryption # Run a single test
 ```
 
 Coverage stores the results of its tests in .coverage files throughout the development directory. I've added the .coverage files to the .gitignore file so that no one accidentally commits them.
