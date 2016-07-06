@@ -15,6 +15,16 @@ Install virtualenv and virtualenvwrapper like so:
 # apt-get install autoconf g++ python-dev python3-dev
 ```
 
+Note that you may need to append the following to your `~/.bashrc` file before using virtualenvwrapper on Linux:
+
+**~/.bashrc**
+```
+...
+
+# VirtualEnvWrapper
+. /etc/bash_completion.d/virtualenvwrapper
+```
+
 Create a new virtualenv in the `hermes/hermes-api/hermeslib/` directory
 
 ```
