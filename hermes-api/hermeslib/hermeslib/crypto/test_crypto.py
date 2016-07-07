@@ -17,7 +17,7 @@ from hermeslib.crypto.crypto import public_key_to_file # pylint: disable=E0401
 from hermeslib.crypto.crypto import asymmetric_decrypt # pylint: disable=E0401
 from hermeslib.crypto.crypto import asymmetric_encrypt_sign # pylint: disable=E0401
 from hermeslib.crypto.crypto import asymmetric_decrypt_verify # pylint: disable=E0401
-# from hermeslib.crypto.crypto import asymmetric_sign # pylint: disable=E0401
+from hermeslib.crypto.crypto import asymmetric_sign # pylint: disable=E0401
 from hermeslib.crypto.crypto import asymmetric_verify # pylint: disable=E0401
 from hermeslib.crypto.crypto import public_key_sha256 # pylint: disable=E0401
 from hermeslib.crypto.crypto import sha256 # pylint: disable=E0401
@@ -167,8 +167,12 @@ class CryptoTestCase(unittest.TestCase):
 
     def test_asymmetric_sign(self):
         """Tests asymmetric signatures"""
-        # TODO: test asymmetric_sign
-        pass
+        plaintext = "I do things like get in a taxi and say, 'The\
+                     library, and step on it.'"
+        signature = asymmetric_sign(plaintext, self._server_priv_key1)
+        self.assertTrue(asymmetric_verify(signature,
+                                          plaintext,
+                                          self._server_pub_key1))
 
     def test_asymmetric_verify(self):
         """Tests asymmetric signature verification"""

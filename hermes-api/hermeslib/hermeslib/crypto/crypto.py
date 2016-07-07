@@ -167,6 +167,10 @@ def asymmetric_decrypt_verify(msg, decrypt_key, verify_key):
 def asymmetric_verify(signature, plaintext, public_key):
     """Verifies an asymmetrically signed message"""
     try:
+        if isinstance(plaintext, str):
+            plaintext = bytes(plaintext, encoding='utf-8')
+        elif isinstance(plaintext, bytearray):
+            plaintext = bytes(plaintext)
         public_key.verify(signature,
                           plaintext,
                           PSS(mgf=MGF1(SHA256()),
@@ -236,6 +240,10 @@ def asymmetric_sign(msg, sign_key):
     signer = sign_key.signer(PSS(mgf=MGF1(SHA256()),
                                  salt_length=PSS.MAX_LENGTH),
                              SHA256())
+    if isinstance(msg, str):
+        msg = bytes(msg, encoding='utf-8')
+    elif isinstance(msg, bytearray):
+        msg = bytes(msg)
     signer.update(msg)
     return signer.finalize()
 
