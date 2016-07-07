@@ -105,6 +105,13 @@ def private_key_from_str(private_key_str, password=None):
     """Load a PEM-formatted private key from a string and optionally decrypt"""
     if isinstance(private_key_str, str):
         private_key_str = bytes(private_key_str, encoding='utf-8')
+    elif isinstance(private_key_str, bytearray):
+        private_key_str = bytes(private_key_str)
+    if password:
+        if isinstance(password, str):
+            password = bytes(password, encoding='utf-8')
+        elif isinstance(password, bytearray):
+            password = bytes(password)
     return load_pem_private_key(private_key_str,
                                 password=password,
                                 backend=default_backend())
@@ -147,6 +154,10 @@ def private_key_to_str(private_key, password=None):
                                          format=PrivateFormat.PKCS8,
                                          encryption_algorithm=NoEncryption())
     else:
+        if isinstance(password, str):
+            password = bytes(password, encoding='utf-8')
+        elif isinstance(password, bytearray):
+            password = bytes(password)
         return private_key.private_bytes(encoding=Encoding.PEM,
                                          format=PrivateFormat.PKCS8,
                                          encryption_algorithm=BestAvailableEncryption(password))

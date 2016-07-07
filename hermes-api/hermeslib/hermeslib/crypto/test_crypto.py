@@ -13,6 +13,7 @@ from hermeslib.crypto.crypto import private_key_to_str # pylint: disable=E0401
 from hermeslib.crypto.crypto import public_key_to_str # pylint: disable=E0401
 from hermeslib.crypto.crypto import private_key_to_file # pylint: disable=E0401
 from hermeslib.crypto.crypto import public_key_to_file # pylint: disable=E0401
+from hermeslib.crypto.crypto import private_key_from_file # pylint: disable=E0401
 # from hermeslib.crypto.crypto import asymmetric_encrypt # pylint: disable=E0401
 from hermeslib.crypto.crypto import asymmetric_decrypt # pylint: disable=E0401
 from hermeslib.crypto.crypto import asymmetric_encrypt_sign # pylint: disable=E0401
@@ -134,8 +135,31 @@ class CryptoTestCase(unittest.TestCase):
             # Even when one of them is overwritten
             private_key_to_file(key, path2)
             self.assertTrue(filecmp.cmp(path1, path2))
-        remove(path1)
-        remove(path2)
+
+            # check reading from file
+            key_r = private_key_from_file(path1)
+            self.assertEqual(private_key_to_str(key_r),
+                             private_key_to_str(key))
+            key_r = private_key_from_file(path2)
+            self.assertEqual(private_key_to_str(key_r),
+                             private_key_to_str(key))
+
+            remove(path1)
+            remove(path2)
+
+            # check how the passwords work
+            private_key_to_file(key, path1, "something")
+            private_key_to_file(key, path2, "something")
+
+            # check reading from file
+            key_r = private_key_from_file(path1, "something")
+            self.assertEqual(private_key_to_str(key_r),
+                             private_key_to_str(key))
+            key_r = private_key_from_file(path2, "something")
+            self.assertEqual(private_key_to_str(key_r),
+                             private_key_to_str(key))
+            remove(path1)
+            remove(path2)
 
     def test_public_key_to_file(self):
         """Tests public key file-export"""
