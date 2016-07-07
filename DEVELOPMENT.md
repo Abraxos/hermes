@@ -42,7 +42,7 @@ $ workon hermeslib-dev
 ### Step 2: Install dependencies
 
 ```
-(hermeslib-dev)$ pip install twisted pycrypto sqlalchemy rsa pastescript msgpack-python
+(hermeslib-dev)$ pip install twisted cryptography sqlalchemy rsa pastescript msgpack-python
 ```
 
 If you plan on running unit tests, you probably want to have code-coverage tools so make sure to install coverage as well in your development environment:
