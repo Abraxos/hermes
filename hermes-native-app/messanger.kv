@@ -1,0 +1,100 @@
+#:import SlideTransition kivy.uix.screenmanager.SlideTransition
+
+<MainWindow>:
+	cols: 2
+	rows: 2
+	ListView:
+		id: channel_list
+		size_hint_x: 0.2
+		size_hint_y: 0.9
+		adapter: root.saved_channels_list_adapter
+
+	ScreenManager:
+		id: screen_controls
+		size_hint_x: 0.8
+		size_hint_y: 0.9
+		transistion: SlideTransition
+		SettingScreen:
+		MenuScreen:
+		
+	BoxLayout:
+		id: general_controls
+		size_hint_x: 0.2
+		size_hint_y: 0.1
+		Button:
+			id: swipe_left
+			text: 'left'
+			on_press: root.swipe_transition('left')
+			
+		Button:
+			id: swipe_right
+			text: 'right'
+			on_press: root.swipe_transition('right')
+	BoxLayout:
+		id: input_controls
+		orientation: 'vertical'
+		size_hint_x: 0.8
+		size_hint_y: 0.1
+		GridLayout:
+			size_hint_y: 0.4
+			cols: 4
+			Button:
+				id: join
+				text: 'join'
+				on_press: root.join_channel()
+			Button:
+				id: leave
+				text: 'leave'
+				on_press: root.leave_channel()
+			Button:
+				id: invite
+				text: 'invite'
+			Button:
+				id: create
+				text: 'create'
+				on_press: root.new_channel()
+		BoxLayout:
+			size_hint_y: 0.6
+			TextInput:
+				id: text_entry
+				size_hint_x: 0.9
+				font_size: 22
+				text: "type something here..."
+			Button:
+				size_hint_x: 0.1
+				id: send
+				text: 'send'
+				on_press: root.send_message()
+
+
+<ChannelScreen>:
+	BoxLayout:
+		name: root.name
+		orientation: 'vertical'
+		BoxLayout:
+			id: chat_info
+			orientation: 'horizontal'
+			size_hint_y: 0.1
+			Label:
+				id: channel_name
+				text: root.name
+			Button:
+				id: channel_info
+				text: 'channel info'
+			Button:
+				id: user_list
+				text: 'user list'
+		ListView:
+			id: chat_log
+			adapter: root.message_list_adapter
+			size_hint_y: 0.9
+
+<SettingScreen>:
+	name: 'setting'
+	Label:
+		text: 'setting'
+
+<MenuScreen>:
+	name: 'menu'
+	Label:
+		text: 'menu'
