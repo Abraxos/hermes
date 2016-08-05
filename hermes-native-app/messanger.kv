@@ -3,10 +3,13 @@
 <MainWindow>:
 	cols: 2
 	rows: 2
+	#rows_mimimum: {0:100, 1:300}
+	#cols_minimum: {0:200, 1:400}
 	ListView:
 		id: channel_list
-		size_hint_x: 0.2
+		size_hint_x: None #0.2
 		size_hint_y: 0.9
+		width: 130
 		adapter: root.saved_channels_list_adapter
 
 	ScreenManager:
@@ -19,8 +22,10 @@
 		
 	BoxLayout:
 		id: general_controls
-		size_hint_x: 0.2
-		size_hint_y: 0.1
+		size_hint_x: None #0.2
+		size_hint_y: None #0.1
+		width: 130
+		height: 60
 		Button:
 			id: swipe_left
 			text: 'left'
@@ -34,25 +39,37 @@
 		id: input_controls
 		orientation: 'vertical'
 		size_hint_x: 0.8
-		size_hint_y: 0.1
+		size_hint_y: None #0.1
+		height: 60
 		GridLayout:
 			size_hint_y: 0.4
-			cols: 4
+			cols: 5
 			Button:
 				id: join
 				text: 'join'
+				size_hint_x: None
+				width: 100
 				on_press: root.join_channel()
 			Button:
 				id: leave
 				text: 'leave'
+				size_hint_x: None
+				width: 100
 				on_press: root.leave_channel()
 			Button:
 				id: invite
 				text: 'invite'
+				size_hint_x: None
+				width: 100
 			Button:
 				id: create
 				text: 'create'
+				size_hint_x: None
+				width: 100
 				on_press: root.new_channel()
+			Button:
+				id: banner
+				size_hint_x: 1.0
 		BoxLayout:
 			size_hint_y: 0.6
 			TextInput:
@@ -61,7 +78,8 @@
 				font_size: 22
 				text: "type something here..."
 			Button:
-				size_hint_x: 0.1
+				size_hint_x: None #0.1
+				width: 50
 				id: send
 				text: 'send'
 				on_press: root.send_message()
@@ -74,7 +92,8 @@
 		BoxLayout:
 			id: chat_info
 			orientation: 'horizontal'
-			size_hint_y: 0.1
+			size_hint_y: None #0.1
+			height: 50
 			Label:
 				id: channel_name
 				text: root.name
