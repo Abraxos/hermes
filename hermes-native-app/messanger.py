@@ -93,7 +93,6 @@ class MainWindow(GridLayout):
                         current_channel.ids['chat_log'].adapter.bind(on_selection_change=self.press_message_list_item)
 
         def press_message_list_item(self, list_adapter, *args):
-                print(list_adapter.selection[0].text)
                 content = GridLayout(cols=1)
                 content_cancel = Button(text='Cancel', size_hint_y=None, height=40)
                 content.add_widget(Button(text='Reply'))
@@ -111,6 +110,14 @@ class MainWindow(GridLayout):
                 popup.open()
 
                 # action handlers
+
+
+        def find_index_of_selected_channel(self,selection):
+                idx = 0
+                for screen in self.screens:
+                        if(screen[0] == selection):
+                                self.current_screen_index = idx
+                        idx+=1
         
 
         def press_transition_channel_list_item(self, list_adapter, *args):
@@ -120,6 +127,7 @@ class MainWindow(GridLayout):
                                         sc = self.ids['screen_controls']
                                         sc.transition.direction='up'
                                         sc.current = list_adapter.selection[0].text
+                                        self.find_index_of_selected_channel(list_adapter.selection[0].text)
                 
 
         def swipe_transition(self, direction):
