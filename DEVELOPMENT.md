@@ -12,7 +12,18 @@ Install virtualenv and virtualenvwrapper like so:
 
 ```
 # apt-get install python-virtualenv virtualenvwrapper
+# apt-get install build-essential libssl-dev libffi-dev
 # apt-get install autoconf g++ python-dev python3-dev
+```
+
+Note that you may need to append the following to your `~/.bashrc` file before using virtualenvwrapper on Linux:
+
+**~/.bashrc**
+```
+...
+
+# VirtualEnvWrapper
+. /etc/bash_completion.d/virtualenvwrapper
 ```
 
 Create a new virtualenv in the `hermes/hermes-api/hermeslib/` directory
@@ -31,7 +42,7 @@ $ workon hermeslib-dev
 ### Step 2: Install dependencies
 
 ```
-(hermeslib-dev)$ pip install twisted pycrypto sqlalchemy rsa pastescript
+(hermeslib-dev)$ pip install twisted cryptography sqlalchemy rsa pastescript msgpack-python
 ```
 
 If you plan on running unit tests, you probably want to have code-coverage tools so make sure to install coverage as well in your development environment:
