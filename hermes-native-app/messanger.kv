@@ -84,7 +84,6 @@
 				text: 'send'
 				on_press: root.send_message()
 
-
 <ChannelScreen>:
 	BoxLayout:
 		name: root.name
@@ -129,3 +128,14 @@
 	name: 'menu'
 	Label:
 		text: 'menu'
+
+<MessageView>:
+	orientation: 'horizontal'
+	ProfileView:
+		name: 'sender'
+		size_hint_x: None
+		width: 100
+	TextView:
+		name: 'message'
+		size_hint_x: .9
+		text: root.name

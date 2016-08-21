@@ -1,4 +1,9 @@
 from kivy.app import App
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.listview import ListView
+from kivy.uix.listview import ListItemLabel
+from kivy.uix.listview import ListItemButton
+from kivy.uix.selectableview import SelectableView
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
@@ -10,10 +15,21 @@ from kivy.adapters.listadapter import ListAdapter
 from kivy.factory import Factory
 from settings import settings_json
 
+# data items
 class Message(object):
 	def __init__(self, msg='', is_selected=False):
                 self.msg = msg
 		self.is_selected = is_selected
+
+# view items
+class ProfileView(SelectableView, Button):
+        pass
+
+class TextView(Label):
+        pass
+
+class MessageView(SelectableView, BoxLayout, Button):
+        pass
 
 class ChannelListItem(Button):
         def __init__(self, name='', is_selected=False):
@@ -21,14 +37,14 @@ class ChannelListItem(Button):
                 self.is_selected = is_selected
 
 class ChannelScreen(Screen):
-        message_list_item_args_converter = lambda row_index, obj: {'text':obj.msg, 
+        message_list_item_args_converter = lambda row_index, obj: {'name':obj.msg, 
                                                                    'size_hint_y': None,
                                                                    'font_size':15,
                                                                    'halign':'left'}
 	message_list_adapter = ListAdapter(data=[],
                                            args_converter=message_list_item_args_converter,
                                            propagate_selection_to_data=True,
-                                           cls=ListItemButton)
+                                           cls=MessageView)
 
 class MenuScreen(Screen):
         pass
@@ -37,7 +53,9 @@ class SettingScreen(Screen):
         pass
 
 class MainWindow(GridLayout):
-        # Globals
+
+        # I'm not sure if kivy maintains a record of screens, their ordered, and current one in view, if it does then the 
+        # three globals below are totally unnecessary and can be refractored. 
         screens = []
         current_screen_index = 0
         latest_screen_id = 0
@@ -58,57 +76,76 @@ class MainWindow(GridLayout):
         
         # message controls
         def send_message(self):
-                self.__post_message()
+                self.post_message()
 
         def recieve_message(self):
-                self.__post_message()
+                self.post_message()
         
         # channel controls
         def new_channel(self):
-                self.__add_channel_to_UI()
+                self.add_channel_to_UI()
 
         def join_channel(self):
-                self.__add_channel_to_UI()
+                self.add_channel_to_UI()
 
         def leave_channel(self):
-                self.__remove_channel_from_UI()
+                self.remove_channel_from_UI()
 
         # GUI actions
-        def __post_message(self):
+        def post_message(self):
                 current_channel = self.screens[self.current_screen_index][1]
                 if current_channel is not None:
                         current_channel_message_log = self.screens[self.current_screen_index][2]
                         current_channel_message_log.append(Message(msg='msg_1'))
-                        message_list_item_args_converter = lambda row_index, obj: {'text':obj.msg, 
+                        message_list_item_args_converter = lambda row_index, obj: {'name':'message', 
                                                                                    'size_hint_y': None,
                                                                                    'font_size':15,
                                                                                    'halign':'left'}
+
                         current_channel.ids['chat_log'].adapter = ListAdapter(data=current_channel_message_log,
                                                                               args_converter=message_list_item_args_converter,
                                                                               propagate_selection_to_data=True,
-                                                                              cls=ListItemButton)
+                                                                              cls=MessageView)
 
                         current_channel.ids['chat_log'].adapter.bind(on_selection_change=self.press_message_list_item)
 
-        def press_message_list_item(self, list_adapter, *args):
+        def selected_message_control(self):
+                 content = GridLayout(cols=1)
+                 content_cancel = Button(text='Cancel', size_hint_y=None, height=40)
+                 content.add_widget(Button(text='Reply'))
+                 content.add_widget(Button(text='Forward'))
+                 content.add_widget(Button(text='Select'))
+                 content.add_widget(Button(text='Delete'))
+                 content.add_widget(content_cancel)
+                
+                 popup = Popup(title='Test popup',
+                               size_hint=(None, None), size=(256, 256),
+                               content=content, disabled=False)
+                 
+                 content_cancel.bind(on_release=popup.dismiss)
+                 popup.open()
+
+        def selected_view_profile(self):
                 content = GridLayout(cols=1)
                 content_cancel = Button(text='Cancel', size_hint_y=None, height=40)
-                content.add_widget(Button(text='Reply'))
-                content.add_widget(Button(text='Forward'))
-                content.add_widget(Button(text='Select'))
-                content.add_widget(Button(text='Delete'))
-                
+                content.add_widget(Button(text='Profile'))
+                content.add_widget(Button(text='Block'))
+                content.add_widget(Button(text='Kick'))
+                content.add_widget(Button(text='Ban'))
                 content.add_widget(content_cancel)
                 
                 popup = Popup(title='Test popup',
                               size_hint=(None, None), size=(256, 256),
                               content=content, disabled=False)
-
+                 
                 content_cancel.bind(on_release=popup.dismiss)
                 popup.open()
 
-                # action handlers
-
+        def press_message_list_item(self, list_adapter, *args):
+                if(list_adapter.selection[0].name == 'message'):
+                        self.selected_message_control()
+                elif(list_adapter.selection[0].name == 'sender'):
+                        self.selected_view_profile()
 
         def find_index_of_selected_channel(self,selection):
                 idx = 0
@@ -118,6 +155,10 @@ class MainWindow(GridLayout):
                         idx+=1
         
 
+        # okay... so for this function I wasn't quite sure how to properly index self.screens so that I could
+        # simply call self.screens[list_adapter.selection[0].text]. So I resorted to iterating over screens
+        # to find the one I'm looking to switch too. If some one could attempt to refractor this that would be great,
+        # mhm..kay?
         def press_transition_channel_list_item(self, list_adapter, *args):
                 if(len(list_adapter.selection) > 0):
                         for obj in self.screens:
@@ -147,7 +188,7 @@ class MainWindow(GridLayout):
                         self.current_screen_index=self.current_screen_index+1
                         sc.current = self.screens[self.current_screen_index][0]
         
-        def __add_channel_to_UI(self):
+        def add_channel_to_UI(self):
                 name = "channel_"+str(self.latest_screen_id)
                 new_channel_screen  = ChannelScreen(name=name)
                 message_log = []
@@ -177,18 +218,21 @@ class MainWindow(GridLayout):
                 channels_list.adapter.bind(on_selection_change=self.press_transition_channel_list_item)
                 
                 current_channel = self.screens[self.current_screen_index][1]
-                message_list_item_args_converter = lambda row_index, obj: {'text':obj.msg, 
+                message_list_item_args_converter = lambda row_index, obj: {'name':obj.msg, 
                                                                            'size_hint_y': None,
                                                                            'font_size':15,
                                                                            'halign':'left'}
+
                 current_channel.ids['chat_log'].adapter = ListAdapter(data=message_log,
                                                                       args_converter=message_list_item_args_converter,
                                                                       propagate_selection_to_data=True,
-                                                                      cls=ListItemButton)
+                                                                      cls=MessageView)
+
+                current_channel.ids['chat_log'].adapter.bind(on_selection_change=self.press_message_list_item)
 
                 self.latest_screen_id+=1
 
-        def __remove_channel_from_UI(self):
+        def remove_channel_from_UI(self):
                 current_channel = self.screens[self.current_screen_index][1]
                 current_channel_name = self.screens[self.current_screen_index][0]
 
