@@ -15,33 +15,44 @@ from kivy.adapters.listadapter import ListAdapter
 from kivy.factory import Factory
 from settings import settings_json
 
-# data items
+# DATA ITEMS
+# any newly defined custom data classes will go here
 class Message(object):
-	def __init__(self, msg='', is_selected=False):
-                self.msg = msg
+	def __init__(self, poster='', message='', is_selected=False):
+                self.message = message
+                self.poster = poster
 		self.is_selected = is_selected
 
-# view items
-class ProfileView(SelectableView, Button):
-        pass
-
-class TextView(Label):
-        pass
-
-class MessageView(SelectableView, BoxLayout, Button):
-        pass
-
-class ChannelListItem(Button):
-        def __init__(self, name='', is_selected=False):
+class Conversation(object):
+        def __init__(self, name='', is_selected=True):
                 self.name = name
                 self.is_selected = is_selected
 
+
+# VIEW ITEMS
+# any newly defined custom UI classes will go here
+
+# SUB-COMPONENTS
+# UI items inside the main window
+class UserAvatar(SelectableView, Button):
+        pass
+
+class MessageTextBox(SelectableView, Button, Label):
+        pass
+
+class MessageView(SelectableView, BoxLayout):
+        pass
+
+class ConversationListItemView(SelectableView, Button, BoxLayout):
+        pass
+
 class ChannelScreen(Screen):
-        message_list_item_args_converter = lambda row_index, obj: {'name':obj.msg, 
+        message_list_item_args_converter = lambda row_index, obj: {'poster': obj.poster,
+                                                                   'message': obj.poster+':\n'+obj.message,
                                                                    'size_hint_y': None,
                                                                    'font_size':15,
                                                                    'halign':'left'}
-	message_list_adapter = ListAdapter(data=[],
+        message_list_adapter = ListAdapter(data=[],
                                            args_converter=message_list_item_args_converter,
                                            propagate_selection_to_data=True,
                                            cls=MessageView)
@@ -52,16 +63,22 @@ class MenuScreen(Screen):
 class SettingScreen(Screen):
         pass
 
+# MAIN WINDOW
+# root window, the parent of all other components
 class MainWindow(GridLayout):
-
+        
+        # INITIALIZE
+        
+        # note-to-self: Ivan Pozdnyakov
         # I'm not sure if kivy maintains a record of screens, their ordered, and current one in view, if it does then the 
-        # three globals below are totally unnecessary and can be refractored. 
+        # three globals below are totally unnecessary and can be refractored.
+ 
         screens = []
         current_screen_index = 0
         latest_screen_id = 0
 
         saved_channels_list=[]
-        saved_channels_list_item_args_converter = lambda row_index, obj: {'text':obj.msg, 
+        saved_channels_list_item_args_converter = lambda row_index, obj: {'text':obj.name, 
                                                                           'size_hint_y': None,
                                                                           'font_size':15,
                                                                           'halign':'left'}
@@ -73,6 +90,8 @@ class MainWindow(GridLayout):
         # Add menu and setting screens
         screens.append(('setting',None))
         screens.append(('menu',None))
+        
+        # USER ACTIONS
         
         # message controls
         def send_message(self):
@@ -91,23 +110,24 @@ class MainWindow(GridLayout):
         def leave_channel(self):
                 self.remove_channel_from_UI()
 
-        # GUI actions
+        def press_message_list_item(self, list_adapter, *args):
+                if(len(list_adapter.selection) == 0):
+                        pass
+                elif(list_adapter.selection[0].name == 'message'):
+                        self.selected_message_control()
+                elif(list_adapter.selection[0].name == 'user_avatar'):
+                        self.selected_view_profile()
+
+        # INTERNALS (these should typically be wrapped by a user action)
         def post_message(self):
+                current_user = 'Ivan Pozdnyakov' 
+                text_input = self.ids['text_entry'].text
                 current_channel = self.screens[self.current_screen_index][1]
-                if current_channel is not None:
-                        current_channel_message_log = self.screens[self.current_screen_index][2]
-                        current_channel_message_log.append(Message(msg='msg_1'))
-                        message_list_item_args_converter = lambda row_index, obj: {'name':'message', 
-                                                                                   'size_hint_y': None,
-                                                                                   'font_size':15,
-                                                                                   'halign':'left'}
+                if(current_channel is not None and text_input != ''):
+                      current_channel_message_log = self.screens[self.current_screen_index][2]
+                      current_channel_message_log.append(Message(message=text_input,poster=current_user))
 
-                        current_channel.ids['chat_log'].adapter = ListAdapter(data=current_channel_message_log,
-                                                                              args_converter=message_list_item_args_converter,
-                                                                              propagate_selection_to_data=True,
-                                                                              cls=MessageView)
-
-                        current_channel.ids['chat_log'].adapter.bind(on_selection_change=self.press_message_list_item)
+                      self.bind_chatlog_data(current_channel,current_channel_message_log)
 
         def selected_message_control(self):
                  content = GridLayout(cols=1)
@@ -141,12 +161,6 @@ class MainWindow(GridLayout):
                 content_cancel.bind(on_release=popup.dismiss)
                 popup.open()
 
-        def press_message_list_item(self, list_adapter, *args):
-                if(list_adapter.selection[0].name == 'message'):
-                        self.selected_message_control()
-                elif(list_adapter.selection[0].name == 'sender'):
-                        self.selected_view_profile()
-
         def find_index_of_selected_channel(self,selection):
                 idx = 0
                 for screen in self.screens:
@@ -154,7 +168,7 @@ class MainWindow(GridLayout):
                                 self.current_screen_index = idx
                         idx+=1
         
-
+        # note-to-self: Ivan Pozdnyakov
         # okay... so for this function I wasn't quite sure how to properly index self.screens so that I could
         # simply call self.screens[list_adapter.selection[0].text]. So I resorted to iterating over screens
         # to find the one I'm looking to switch too. If some one could attempt to refractor this that would be great,
@@ -191,44 +205,26 @@ class MainWindow(GridLayout):
         def add_channel_to_UI(self):
                 name = "channel_"+str(self.latest_screen_id)
                 new_channel_screen  = ChannelScreen(name=name)
-                message_log = []
+                
+                current_user = 'Ivan Pozdnyakov'
+                text_input = 'Hello!'
+                message_log = [Message(message=text_input,poster=current_user)]
                 
                 self.current_screen_index = len(self.screens)
                 self.screens.append((name,new_channel_screen,message_log))
                 
-                self.saved_channels_list.append(ChannelListItem(name=name))
+                self.saved_channels_list.append(Conversation(name=name))
                 
                 sc = self.ids['screen_controls']
                 sc.add_widget(new_channel_screen)
                 sc.transition.direction = 'up'
-                sc.current = name
+                sc.current = self.screens[self.current_screen_index][0]
 
                 channels_list = self.ids['channel_list']
-                self.saved_channels_list_item_args_converter = lambda row_index, obj: {'text':obj.name, 
-                                                                                       'size_hint_y': None, 
-                                                                                       'font_size':25,
-                                                                                       'halign':'right'}
-                channels_list.adapter = ListAdapter(data=self.saved_channels_list,
-                                                    args_converter=self.saved_channels_list_item_args_converter,
-                                                    propagate_selection_to_data=True,
-                                                    selection_mode='single',
-                                                    allow_empty_selection=False,
-                                                    cls=ListItemButton)
-
-                channels_list.adapter.bind(on_selection_change=self.press_transition_channel_list_item)
+                self.bind_channels_data(channels_list)
                 
                 current_channel = self.screens[self.current_screen_index][1]
-                message_list_item_args_converter = lambda row_index, obj: {'name':obj.msg, 
-                                                                           'size_hint_y': None,
-                                                                           'font_size':15,
-                                                                           'halign':'left'}
-
-                current_channel.ids['chat_log'].adapter = ListAdapter(data=message_log,
-                                                                      args_converter=message_list_item_args_converter,
-                                                                      propagate_selection_to_data=True,
-                                                                      cls=MessageView)
-
-                current_channel.ids['chat_log'].adapter.bind(on_selection_change=self.press_message_list_item)
+                self.bind_chatlog_data(current_channel,message_log)
 
                 self.latest_screen_id+=1
 
@@ -249,18 +245,31 @@ class MainWindow(GridLayout):
                 sc.current = 'menu'
 
                 channels_list = self.ids['channel_list']
-                self.saved_channels_list_item_args_converter = lambda row_index, obj: {'text':obj.name, 
-                                                                                       'size_hint_y': None, 
-                                                                                       'font_size':25,
-                                                                                       'halign':'right'}
+                self.bind_channels_data(channels_list)
+
+        def bind_channels_data(self, channels_list):
+                self.saved_channels_list_item_args_converter = lambda row_index, obj: {'text':obj.name}
+                
                 channels_list.adapter = ListAdapter(data=self.saved_channels_list,
                                                     args_converter=self.saved_channels_list_item_args_converter,
-                                                    propagate_selection_to_data=True,
                                                     selection_mode='single',
                                                     allow_empty_selection=False,
-                                                    cls=ListItemButton)
-
+                                                    template='ConversationListItemView')
+                
                 channels_list.adapter.bind(on_selection_change=self.press_transition_channel_list_item)
+                channels_list._reset_spopulate()
+
+        def bind_chatlog_data(self,current_channel,message_log):
+                 message_list_item_args_converter = lambda row_index, obj: {'text': obj.poster+':\n'+obj.message}
+
+                 current_channel.ids['chat_log'].adapter = ListAdapter(data=message_log,
+                                                                       args_converter=message_list_item_args_converter,
+                                                                       selection_mode='single',
+                                                                       allow_empty_selection=False,
+                                                                       template='MessageView')
+
+                 current_channel.ids['chat_log'].adapter.bind(on_selection_change=self.press_message_list_item)
+                 current_channel.ids['chat_log']._reset_spopulate()
 
 class Messanger(App):
 	def build(self):

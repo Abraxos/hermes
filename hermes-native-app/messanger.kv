@@ -74,9 +74,10 @@
 			size_hint_y: 0.6
 			TextInput:
 				id: text_entry
+				multiline: True
 				size_hint_x: 0.9
 				font_size: 22
-				text: "type something here..."
+				text: ""
 			Button:
 				size_hint_x: None #0.1
 				width: 50
@@ -129,13 +130,23 @@
 	Label:
 		text: 'menu'
 
-<MessageView>:
+[MessageView@SelectableView+BoxLayout]:
+	name: 'message_container'
 	orientation: 'horizontal'
-	ProfileView:
-		name: 'sender'
+	size_hint_y: None
+	height: 100
+	UserAvatar:
+		name: 'user_avatar'
 		size_hint_x: None
 		width: 100
-	TextView:
+		height: 100
+	MessageTextBox:
 		name: 'message'
 		size_hint_x: .9
-		text: root.name
+		text: ctx.text
+
+[ConversationListItemView@SelectableView+Button]:
+	name: 'converation_list_item_container'
+	size_hint_y: None
+	height: 100
+	text: ctx.text
