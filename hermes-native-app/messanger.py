@@ -43,19 +43,17 @@ class MessageTextBox(SelectableView, Button, Label):
 class MessageView(SelectableView, BoxLayout):
         pass
 
-class ConversationListItemView(SelectableView, Button, BoxLayout):
+class ConversationListItemView(SelectableView, Button):
         pass
 
 class ChannelScreen(Screen):
-        message_list_item_args_converter = lambda row_index, obj: {'poster': obj.poster,
-                                                                   'message': obj.poster+':\n'+obj.message,
-                                                                   'size_hint_y': None,
-                                                                   'font_size':15,
-                                                                   'halign':'left'}
+        message_log = []
+        message_list_item_args_converter = lambda row_index, obj: {'text': obj.poster+':\n'+obj.message}
         message_list_adapter = ListAdapter(data=[],
                                            args_converter=message_list_item_args_converter,
-                                           propagate_selection_to_data=True,
-                                           cls=MessageView)
+                                           selection_mode='single',
+                                           allow_empty_slection=False,
+                                           template='MessageView')
 
 class MenuScreen(Screen):
         pass
@@ -78,14 +76,12 @@ class MainWindow(GridLayout):
         latest_screen_id = 0
 
         saved_channels_list=[]
-        saved_channels_list_item_args_converter = lambda row_index, obj: {'text':obj.name, 
-                                                                          'size_hint_y': None,
-                                                                          'font_size':15,
-                                                                          'halign':'left'}
+        saved_channels_list_item_args_converter = lambda row_index, obj: {'text':obj.name}
         saved_channels_list_adapter = ListAdapter(data=saved_channels_list,
                                                   args_converter=saved_channels_list_item_args_converter,
-                                                  propagate_selection_to_data=True,
-                                                  cls=ListItemButton)
+                                                  selection_mode='single',
+                                                  allow_empty_selection=False,
+                                                  template='ConversationListItemView')
                 
         # Add menu and setting screens
         screens.append(('setting',None))

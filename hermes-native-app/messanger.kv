@@ -3,19 +3,17 @@
 <MainWindow>:
 	cols: 2
 	rows: 2
-	#rows_mimimum: {0:100, 1:300}
-	#cols_minimum: {0:200, 1:400}
 	ListView:
 		id: channel_list
 		size_hint_x: None #0.2
-		size_hint_y: 0.9
+		size_hint_y: 1 #0.9
 		width: 200
 		adapter: root.saved_channels_list_adapter
 
 	ScreenManager:
 		id: screen_controls
-		size_hint_x: 0.8
-		size_hint_y: 0.9
+		size_hint_x: 1 #0.8
+		size_hint_y: 1 #0.9
 		transistion: SlideTransition
 		SettingScreen:
 		MenuScreen:
@@ -41,9 +39,9 @@
 		size_hint_x: 0.8
 		size_hint_y: None #0.1
 		height: 60
-		GridLayout:
-			size_hint_y: 0.4
-			cols: 5
+		BoxLayout:
+			id: channel_controls
+			height: 24
 			Button:
 				id: join
 				text: 'join'
@@ -68,20 +66,27 @@
 				width: 100
 				on_press: root.new_channel()
 			Button:
-				id: bottom_banner
-				size_hint_x: 1.0
+				size_hint_x: 1
 		BoxLayout:
-			size_hint_y: 0.6
-			TextInput:
-				id: text_entry
-				multiline: True
-				size_hint_x: 0.9
-				font_size: 22
-				text: ""
+			id: message_controls
+			height: 36
+			BoxLayout:
+				id: text_entry_container
+				size_hint_x: 1
+				size_hint_y: None
+				height: min(text_entry.line_height * 5, 16 * (len(text_entry._lines)+1))
+				TextInput:
+					id: text_entry
+					text: ""
+					font_size: 16
+					size_hint_x: None
+					size_hint_y: None
+					width: text_entry_container.width
+					height: max( (len(self._lines)+1) * 16, text_entry_container.height)	
 			Button:
+				id: send
 				size_hint_x: None #0.1
 				width: 50
-				id: send
 				text: 'send'
 				on_press: root.send_message()
 
@@ -112,7 +117,6 @@
 				size_hint_x: None
 				width: 150
 			Button:
-				id:top_right_banner
 		ListView:
 			id: chat_log
 			adapter: root.message_list_adapter
@@ -133,17 +137,24 @@
 [MessageView@SelectableView+BoxLayout]:
 	name: 'message_container'
 	orientation: 'horizontal'
+	size_hint_x: 1
 	size_hint_y: None
-	height: 100
+	height: max(user_avatar.height,message.texture_size[1])
 	UserAvatar:
+		id: user_avatar
 		name: 'user_avatar'
 		size_hint_x: None
+		size_hint_y: None
 		width: 100
 		height: 100
 	MessageTextBox:
+		id: message
 		name: 'message'
-		size_hint_x: .9
-		text: ctx.text
+		size_hint_x: 1
+		size_hint_y: None
+		text_size: self.width, None
+		height: max(user_avatar.height,self.texture_size[1])
+		text: ctx.text		
 
 [ConversationListItemView@SelectableView+Button]:
 	name: 'converation_list_item_container'
