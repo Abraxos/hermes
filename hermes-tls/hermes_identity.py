@@ -126,10 +126,13 @@ class HermesIdentityServerProtocol(Protocol):
             msg_type = dict_obj[ID_MSG_KEY_TYPE]
             if msg_type == ID_MSG_TYPE_FETCH:
                 self.handle_fetch(dict_obj)
+                self.transport.loseConnection()
             elif msg_type == ID_MSG_TYPE_FETCH_MY:
                 self.handle_fetch_my(dict_obj)
+                self.transport.loseConnection()
             elif msg_type == ID_MSG_TYPE_REGISTER:
                 self.handle_registration(dict_obj)
+                self.transport.loseConnection()
             else:
                 self.error('Invalid message type')
         else:
