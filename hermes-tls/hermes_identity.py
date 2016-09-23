@@ -31,11 +31,8 @@ ID_MSG_TYPE_FETCHED_CREDS = 'fetched_credentials'
 ID_MSG_TYPE_YOUR_KEY_AND_CERT = 'your_key_and_cert'
 ID_MSG_TYPE_NEW_CERT = 'new_cert'
 
-class ProtocolState(IntEnum):
-    """An enum representing the state of the identification call"""
-    NONE = 0
-    INITIALIZING = 1
-    FETCHING = 2
+# TODO: Replace global users dictionary with a database connection for each protocol
+USERS = {}
 
 @attr.s
 class UserInfo(object):
@@ -46,9 +43,11 @@ class UserInfo(object):
 
 class HermesIdentityServerProtocol(Protocol):
     """HermesIdentityServerProtocol object which handles communication with a single client"""
-    state = ProtocolState.NONE
     # TODO: Replace this in-memory list with a database connection
     users = {} # dict{username:str : user:UserInfo}
+
+    def __init__(self):
+        self.users = USERS
 
     def send(self, msg):
         self.transport.write(pack(msg))
