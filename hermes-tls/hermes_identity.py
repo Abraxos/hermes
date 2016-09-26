@@ -15,7 +15,7 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from utils import log_debug, log_warning, log_info, log_error,accepts, unpack
 from utils import pack, pack_dict
 from crypto import password_verified, hash_salt, private_key_from_file
-from crypto import cert_from_csr, get_subject_name
+from crypto import cert_from_csr, get_subject_name, get_issuer_name
 
 ID_MSG_KEY_TYPE = 'type'
 ID_MSG_KEY_USERNAME = 'username'
@@ -185,7 +185,7 @@ class HermesIdentityServer(object):
     def initialize(self):
         """Initialize the SSL context and protocol factory with all relevant information"""
         self.factory = HermesIdentityServerProtocolFactory(self.key_filepath,
-                                                           get_subject_name())
+                                                           get_issuer_name())
         self.context_factory = DefaultOpenSSLContextFactory(self.key_filepath,
                                                             self.cert_filepath)
         self.context = self.context_factory.getContext()
