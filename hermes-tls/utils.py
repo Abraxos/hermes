@@ -21,7 +21,7 @@ class LogLevel(IntEnum):
 # Configuration Globals (Can be set in other modules using this one)
 LOG_LEVEL = LogLevel.DEBUG
 
-def pack_dict(**kwargs):
+def pack_values(**kwargs):
     """Pack message as an msgpack dictionary"""
     return packb(kwargs, use_bin_type=True)
 

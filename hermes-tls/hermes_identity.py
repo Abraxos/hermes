@@ -9,10 +9,13 @@ from twisted.internet.ssl import DefaultOpenSSLContextFactory # pylint: disable=
 from twisted.internet.protocol import Factory, Protocol # pylint: disable=E0401
 import attr # pylint: disable=E0401
 from attr.validators import instance_of # pylint: disable=E0401
+from cryptography import x509
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
 from utils import log_debug, log_warning, log_info, log_error,accepts, unpack
 from utils import pack, pack_dict
-from crypto import password_verified, hash_salt
+from crypto import password_verified, hash_salt, private_key_from_file
+from crypto import cert_from_csr, get_subject_name
 
 ID_MSG_KEY_TYPE = 'type'
 ID_MSG_KEY_USERNAME = 'username'
@@ -45,9 +48,13 @@ class HermesIdentityServerProtocol(Protocol):
     """HermesIdentityServerProtocol object which handles communication with a single client"""
     # TODO: Replace this in-memory list with a database connection
     users = {} # dict{username:str : user:UserInfo}
+    private_key = None
 
-    def __init__(self):
+    @accepts(object, RSAPrivateKey, x509.Name)
+    def __init__(self, private_key, subject_info):
         self.users = USERS
+        self.private_key = private_key
+        self.subject_info = subject_info
 
     def send(self, msg):
         self.transport.write(pack(msg))
@@ -100,6 +107,7 @@ class HermesIdentityServerProtocol(Protocol):
         else:
             self.error("Invalid message format - lacks username/password")
 
+    @accepts(object, dict)
     def handle_registration(self, dict_obj):
         if all (k in dict_obj for k in (ID_MSG_KEY_USERNAME,
                                         ID_MSG_KEY_PASSWORD,
@@ -109,8 +117,7 @@ class HermesIdentityServerProtocol(Protocol):
             password =          dict_obj[ID_MSG_KEY_PASSWORD]
             csr =               dict_obj[ID_MSG_KEY_CSR]
             encrypted_privkey = dict_obj[ID_MSG_KEY_ENC_PRIV]
-            # TODO: Approve the CSR and return the certificate
-            cert = None
+            cert = cert_from_csr(self.subject_info, self.private_key, csr)
             hashed_salted_pw = hash_salt(password)
             user_info = UserInfo(username, hashed_salted_pw,
                                  encrypted_privkey, cert)
@@ -120,6 +127,7 @@ class HermesIdentityServerProtocol(Protocol):
         else:
             self.error("Invalid message format - lacks username/password/csr")
 
+    @accepts(object, dict)
     def dict_received(self, dict_obj): # pylint: disable=R0201
         if ID_MSG_KEY_TYPE in dict_obj:
             msg_type = dict_obj[ID_MSG_KEY_TYPE]
@@ -150,6 +158,19 @@ def verify_client(connection, x509, errnum, errdepth, auth_ok):
     log_info('Client Authentication Successful: {0}'.format(x509.get_subject()))
     return True
 
+class HermesIdentityServerProtocolFactory(Factory):
+    protocol = HermesIdentityServerProtocol
+    subject_info = None
+
+    @accepts(object, str)
+    def __init__(self, private_key_filepath, subject_info):
+        self.private_key = private_key_from_file(private_key_filepath)
+        self.subject_info = subject_info
+
+    @accepts(object)
+    def buildProtocol(self):
+        return HermesIdentityServerProtocol(self.private_key, self.subject_info)
+
 @attr.s
 class HermesIdentityServer(object):
     """Hermes Identity Server object that handles actually running the server reactor"""
@@ -161,10 +182,10 @@ class HermesIdentityServer(object):
     context_factory = None
     context = None
 
-    def initialize(self, protocol):
+    def initialize(self):
         """Initialize the SSL context and protocol factory with all relevant information"""
-        self.factory = Factory()
-        self.factory.protocol = protocol
+        self.factory = HermesIdentityServerProtocolFactory(self.key_filepath,
+                                                           get_subject_name())
         self.context_factory = DefaultOpenSSLContextFactory(self.key_filepath,
                                                             self.cert_filepath)
         self.context = self.context_factory.getContext()
@@ -180,5 +201,5 @@ if __name__ == '__main__':
                                   'testing_keys/server/server.key',
                                   'testing_keys/server/server.cert',
                                   'testing_keys/ca/ca.cert')
-    SERVER.initialize(HermesIdentityServerProtocol)
+    SERVER.initialize()
     SERVER.run_reactor()
