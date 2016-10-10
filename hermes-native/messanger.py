@@ -59,6 +59,9 @@ class MainWindow(GridLayout):
         def __init__(self,**kwargs):
                 super(MainWindow, self).__init__(**kwargs)
                 Clock.schedule_once(self.finish_init)
+                # expose for unit testing
+                app = App.get_running_app()
+                app.main_window = self
         
         # USER ACTIONS
         
@@ -79,12 +82,10 @@ class MainWindow(GridLayout):
         def leave_conversation(self):
                 self.remove_conversation_from_UI()
 
-        def press_message_list_item(self, list_adapter, *args):
-                if(len(list_adapter.selection) == 0):
-                        pass
-                elif(list_adapter.selection[0].name == 'message'):
+        def press_message_list_item(self, selection):
+                if(selection == 'message'):
                         self.selected_message_control()
-                elif(list_adapter.selection[0].name == 'user_avatar'):
+                elif(selection == 'user_avatar'):
                         self.selected_view_profile()
 
         # INTERNALS
@@ -121,6 +122,10 @@ class MainWindow(GridLayout):
                  content_cancel.bind(on_release=popup.dismiss)
                  popup.open()
 
+                 # expose for unit testing
+                 app = App.get_running_app()
+                 app.message_control = content
+
         def selected_view_profile(self):
                 content = GridLayout(cols=1)
                 content_cancel = Button(text='Cancel', size_hint_y=None, height=40)
@@ -136,6 +141,10 @@ class MainWindow(GridLayout):
                  
                 content_cancel.bind(on_release=popup.dismiss)
                 popup.open()
+
+                # expose for unit testing
+                app = App.get_running_app()
+                app.profile_control = content
 
         def find_index_of_selected_conversation(self,selection):
                 idx = 0
@@ -190,7 +199,7 @@ class MainWindow(GridLayout):
                 self.latest_screen_id+=1
 
         def remove_conversation_from_UI(self):
-                current_conversation = self.screens[self.current_conversation_index][1]
+                current_conversation = self.screens[self.current_screen_index][1]
                 current_conversation_name = self.screens[self.current_screen_index][0]
 
                 del self.screens[self.current_screen_index]
