@@ -16,23 +16,7 @@ from utils import log_debug, log_warning, log_info, log_error,accepts, unpack
 from utils import pack, pack_dict
 from crypto import password_verified, hash_salt, private_key_from_file
 from crypto import cert_from_csr, get_subject_name, get_issuer_name
-
-ID_MSG_KEY_TYPE = 'type'
-ID_MSG_KEY_USERNAME = 'username'
-ID_MSG_KEY_PASSWORD = 'password'
-ID_MSG_KEY_CERT = 'cert'
-ID_MSG_KEY_CSR = 'csr'
-ID_MSG_KEY_ENC_PRIV = 'encrypted_privkey'
-ID_MSG_KEY_CA = 'ca'
-ID_MSG_KEY_ERROR_MSG = 'error_msg'
-
-ID_MSG_TYPE_ERROR = 'error'
-ID_MSG_TYPE_FETCH = 'fetch'
-ID_MSG_TYPE_REGISTER = 'register'
-ID_MSG_TYPE_FETCH_MY = 'fetch_my'
-ID_MSG_TYPE_FETCHED_CREDS = 'fetched_credentials'
-ID_MSG_TYPE_YOUR_KEY_AND_CERT = 'your_key_and_cert'
-ID_MSG_TYPE_NEW_CERT = 'new_cert'
+from hermes_constants import *
 
 # TODO: Replace global users dictionary with a database connection for each protocol
 USERS = {}
@@ -81,6 +65,7 @@ class HermesIdentityServerProtocol(Protocol):
         else:
             self.dict_received(msg_obj)
 
+    @accepts(object, dict)
     def handle_fetch(self, dict_obj):
         if ID_MSG_KEY_USERNAME in dict_obj:
             username = dict_obj[ID_MSG_KEY_USERNAME]
@@ -92,6 +77,7 @@ class HermesIdentityServerProtocol(Protocol):
         else:
             self.error("Fetch request doesn't have a username")
 
+    @accepts(object, dict)
     def handle_fetch_my(self, dict_obj):
         if all (k in dict_obj for k in (ID_MSG_KEY_USERNAME,
                                         ID_MSG_KEY_PASSWORD)):
@@ -117,13 +103,16 @@ class HermesIdentityServerProtocol(Protocol):
             password =          dict_obj[ID_MSG_KEY_PASSWORD]
             csr =               dict_obj[ID_MSG_KEY_CSR]
             encrypted_privkey = dict_obj[ID_MSG_KEY_ENC_PRIV]
-            cert = cert_from_csr(self.subject_info, self.private_key, csr)
-            hashed_salted_pw = hash_salt(password)
-            user_info = UserInfo(username, hashed_salted_pw,
-                                 encrypted_privkey, cert)
-            self.users[username] = user_info
-            self.send({ID_MSG_KEY_TYPE:ID_MSG_TYPE_NEW_CERT,
-                       ID_MSG_KEY_CERT:cert})
+            if username not in self.users:
+                cert = cert_from_csr(self.subject_info, self.private_key, csr)
+                hashed_salted_pw = hash_salt(password)
+                user_info = UserInfo(username, hashed_salted_pw,
+                                     encrypted_privkey, cert)
+                self.users[username] = user_info
+                self.send({ID_MSG_KEY_TYPE:ID_MSG_TYPE_NEW_CERT,
+                           ID_MSG_KEY_CERT:cert})
+            else:
+                self.error(ID_MSG_ERROR_USERNAME_EXISTS)
         else:
             self.error("Invalid message format - lacks username/password/csr")
 

@@ -1,0 +1,18 @@
+ID_MSG_KEY_TYPE = 'type'
+ID_MSG_KEY_USERNAME = 'username'
+ID_MSG_KEY_PASSWORD = 'password'
+ID_MSG_KEY_CERT = 'cert'
+ID_MSG_KEY_CSR = 'csr'
+ID_MSG_KEY_ENC_PRIV = 'encrypted_privkey'
+ID_MSG_KEY_CA = 'ca'
+ID_MSG_KEY_ERROR_MSG = 'error_msg'
+
+ID_MSG_TYPE_ERROR = 'error'
+ID_MSG_TYPE_FETCH = 'fetch'
+ID_MSG_TYPE_REGISTER = 'register'
+ID_MSG_TYPE_FETCH_MY = 'fetch_my'
+ID_MSG_TYPE_FETCHED_CREDS = 'fetched_credentials'
+ID_MSG_TYPE_YOUR_KEY_AND_CERT = 'your_key_and_cert'
+ID_MSG_TYPE_NEW_CERT = 'new_cert'
+
+ID_MSG_ERROR_USERNAME_EXISTS = 'username_already_exists'
