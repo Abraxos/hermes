@@ -135,17 +135,17 @@ class HermesIdentityServerProtocol(Protocol):
             self.error('Invalid dictionary object')
 
 
-@accepts(Connection, X509, int, int, int)
-def verify_client(connection, x509, errnum, errdepth, auth_ok):
-    """Verifies the identity of the client using SSL"""
-    if not auth_ok:
-        log_warning('Invalid Client Authentication: {0}\n\tConnection: {1}\n'\
-                    '\tErrNum: {2} ErrDepth: {3}'.format(x509.get_subject(),
-                                                         connection, errnum,
-                                                         errdepth))
-        return False
-    log_info('Client Authentication Successful: {0}'.format(x509.get_subject()))
-    return True
+# @accepts(Connection, X509, int, int, int)
+# def verify_client(connection, x509, errnum, errdepth, auth_ok):
+#     """Verifies the identity of the client using SSL"""
+#     if not auth_ok:
+#         log_warning('Invalid Client Authentication: {0}\n\tConnection: {1}\n'\
+#                     '\tErrNum: {2} ErrDepth: {3}'.format(x509.get_subject(),
+#                                                          connection, errnum,
+#                                                          errdepth))
+#         return False
+#     log_info('Client Authentication Successful: {0}'.format(x509.get_subject()))
+#     return True
 
 class HermesIdentityServerProtocolFactory(Factory):
     protocol = HermesIdentityServerProtocol

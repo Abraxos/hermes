@@ -16,3 +16,4 @@ ID_MSG_TYPE_YOUR_KEY_AND_CERT = 'your_key_and_cert'
 ID_MSG_TYPE_NEW_CERT = 'new_cert'
 
 ID_MSG_ERROR_USERNAME_EXISTS = 'username_already_exists'
+ID_MSG_ERROR_USERNAME_DOES_NOT_EXIST = 'username_does_not_exist'
