@@ -21,13 +21,14 @@ class Test(unittest.TestCase):
     def run_test(self, app, *args):
         Clock.schedule_interval(self.pause, 0.000001)
 
-        # Execute
+        # Setup
         app.main_window.finish_init(None)
         app.main_window.add_conversation_to_UI()
         app.main_window.ids['text_entry'].text = "Hello World!" # Simulate user input
+        
+        # Execute
         app.main_window.post_message()
 
-        # Set Expectations
         screen_index = app.main_window.current_screen_index
         conversation = app.main_window.screens[screen_index][1]
         chat_log = conversation.ids['chat_log'].data

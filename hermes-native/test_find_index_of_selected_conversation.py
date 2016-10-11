@@ -21,16 +21,15 @@ class Test(unittest.TestCase):
     def run_test(self, app, *args):
         Clock.schedule_interval(self.pause, 0.000001)
 
-        # Execute
+        # Setup
         app.main_window.finish_init(None)
         app.main_window.add_conversation_to_UI()
+
+        # Execute
         app.main_window.find_index_of_selected_conversation('conversation_0')
-        
-        # Set Expectation
-        current_screen_index = app.main_window.current_screen_index 
 
         # Assert
-        self.assertEqual(current_screen_index, 2)
+        self.assertEqual(app.main_window.current_screen_index, 2)
 
         # Comment out if you are editing the test, it'll leave the
         # Window opened.

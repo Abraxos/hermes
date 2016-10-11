@@ -21,8 +21,10 @@ class Test(unittest.TestCase):
     def run_test(self, app, *args):
         Clock.schedule_interval(self.pause, 0.000001)
 
-        # Execute
+        # Setup
         app.main_window.finish_init(None)
+        
+        # Execute
         app.main_window.selected_message_control()
 
         # Assert

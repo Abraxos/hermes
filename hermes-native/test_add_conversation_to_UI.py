@@ -21,12 +21,14 @@ class Test(unittest.TestCase):
     def run_test(self, app, *args):
         Clock.schedule_interval(self.pause, 0.000001)
 
-        # Execute
-        app.main_window.finish_init(None)
-        app.main_window.add_conversation_to_UI()
-        
+        # Setup
         sc = app.main_window.ids['screen_controls']
+        app.main_window.finish_init(None)
 
+        # Execute
+        app.main_window.add_conversation_to_UI()
+
+        # Assert
         self.assertIn({'text':'conversation_0'},app.main_window.ids['conversation_list'].data)
         self.assertEqual(app.main_window.current_screen_index,2)
         self.assertEqual(app.main_window.latest_screen_id,1)

@@ -21,13 +21,13 @@ class Test(unittest.TestCase):
     def run_test(self, app, *args):
         Clock.schedule_interval(self.pause, 0.000001)
 
-        # Execute
+        # Setup
         app.main_window.finish_init(None)
         app.main_window.add_conversation_to_UI()
-        app.main_window.select_transition('conversation_0')
-
-        # Set Expectation
         sc = app.main_window.ids['screen_controls']
+        
+        # Excute
+        app.main_window.select_transition('conversation_0')
         
         # Assert
         self.assertEqual(sc.current, 'conversation_0')

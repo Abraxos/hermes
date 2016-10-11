@@ -21,12 +21,12 @@ class Test(unittest.TestCase):
     def run_test(self, app, *args):
         Clock.schedule_interval(self.pause, 0.000001)
 
-        # Execute
+        # Setup
         app.main_window.finish_init(None)
         app.main_window.add_conversation_to_UI()
-        
         sc = app.main_window.ids['screen_controls']
 
+        # Execute and Assert
         app.main_window.swipe_transition('left')
         self.assertEqual(app.main_window.current_screen_index,1)
         self.assertEqual(sc.current, 'menu')
