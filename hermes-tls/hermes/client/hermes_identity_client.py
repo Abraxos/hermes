@@ -5,10 +5,29 @@ from twisted.internet import ssl, reactor # pylint: disable=E0401
 from twisted.internet.protocol import ClientFactory, Protocol # pylint: disable=E0401
 from twisted.internet.defer import Deferred # pylint: disable=E0401
 from OpenSSL import SSL # pylint: disable=E0401
-import attr # pylint: disable=E0401
-from utils import log_debug, log_warning, log_info, log_error, accepts, unpack
-from utils import pack
-from hermes_constants import *
+from hermes.utils.utils import log_debug, log_warning, log_info, log_error, accepts, unpack
+from hermes.utils.utils import pack
+from hermes.utils.constants import *
+
+@accepts(str)
+def _fetch_request(username):
+    return {ID_MSG_KEY_TYPE : ID_MSG_TYPE_FETCH,
+            ID_MSG_KEY_USERNAME : username}
+
+@accepts(str, str)
+def _fetch_my_request(username, password):
+    return {ID_MSG_KEY_TYPE : ID_MSG_TYPE_FETCH_MY,
+            ID_MSG_KEY_USERNAME : username,
+            ID_MSG_KEY_PASSWORD : password}
+
+@accepts(str, str, str)
+def _registration_request(username, acct_password, key_password):
+    """Helper function for generating registration request messages."""
+    return {ID_MSG_KEY_TYPE : ID_MSG_TYPE_REGISTER,
+            ID_MSG_KEY_USERNAME : username,
+            ID_MSG_KEY_PASSWORD : acct_password,
+            ID_MSG_KEY_CSR : None, # TODO: generate CSR
+            ID_MSG_KEY_ENC_PRIV : None} # TODO: get encrypted private key
 
 class HermesIdentityClientProtocol(Protocol):
 
@@ -51,16 +70,14 @@ class HermesIdentityClientProtocol(Protocol):
             self.error('Invalid dictionary object')
             log_warning('Invalid dictionary object')
 
-    def _fetch_request(self, username):
-        return {ID_MSG_KEY_TYPE : ID_MSG_TYPE_FETCH,
-                ID_MSG_KEY_USERNAME : username}
-
+    @accepts(object, str)
     def _fetch(self, username):
-        fetch_request = self._fetch_request(username)
+        fetch_request = _fetch_request(username)
         self.send(fetch_request)
         self.d = Deferred()
         return self.d
 
+    @accepts(object, str)
     def fetch(self, username):
         """Given a username, this function fetches the associated certificate from the
            identity server."""
@@ -82,18 +99,15 @@ class HermesIdentityClientProtocol(Protocol):
         return self._fetch(username).addCallback(received_user_certificate)
         # TODO: write errback as well
 
-    def _fetch_my_request(self, username, password):
-        return {ID_MSG_KEY_TYPE : ID_MSG_TYPE_FETCH_MY,
-                ID_MSG_KEY_USERNAME : username,
-                ID_MSG_KEY_PASSWORD : password}
-
+    @accepts(object, str, str)
     def _fetch_my(self, username, acct_password):
         """Helper function for sending a fetch_my request to the server"""
-        fetch_request = self._fetch_my_request(username, acct_password)
+        fetch_request = _fetch_my_request(username, acct_password)
         self.send(fetch_request)
         self.d = Deferred()
         return self.d
 
+    @accepts(object, str, str)
     def fetch_my(self, username, acct_password):
         """Given a username and password, this function fetches the associated certificate and encrypted private key from the server"""
         def received_credentials(msg):
@@ -115,19 +129,12 @@ class HermesIdentityClientProtocol(Protocol):
         return self._fetch_my(username, acct_password).addCallback(received_credentials)
         # TODO: write errback as well
 
-    def _registration_request(self, username, acct_password, key_password):
-        """Helper function for generating registration request messages."""
-        return {ID_MSG_KEY_TYPE : ID_MSG_TYPE_REGISTER,
-                ID_MSG_KEY_USERNAME : username,
-                ID_MSG_KEY_PASSWORD : acct_password,
-                ID_MSG_KEY_CSR : None, # TODO: generate CSR
-                ID_MSG_KEY_ENC_PRIV : None} # TODO: get encrypted private key
-
+    @accepts(object, str, str, str)
     def _register(self, username, acct_password, key_password):
         """Helper function for sending a registration request to the server."""
-        registration_request = self._registration_request(username,
-                                                          acct_password,
-                                                          key_password)
+        registration_request = _registration_request(username,
+                                                     acct_password,
+                                                     key_password)
         self.send(registration_request)
         self.d = Deferred()
         return self.d

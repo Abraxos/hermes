@@ -1,4 +1,6 @@
 __pycache__
+*.pyc
+_trial_temp
 .idea
 *~
 #*#

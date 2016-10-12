@@ -26,9 +26,10 @@ from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509 import CertificateSigningRequest
+from cryptography.x509 import load_pem_x509_certificate
 from cryptography import x509
 from cryptography.x509.oid import NameOID
-from utils import pack, unpack, pack_values, accepts
+from hermes.utils.utils import pack, unpack, pack_values, accepts
 
 SERVER_COUNTRY_NAME = u'US'
 SERVER_STATE = u'Denial'
@@ -113,6 +114,10 @@ def cert_from_csr(issuer, key, csr):
     ).sign(key, SHA256(), default_backend())
     return cert
 
+@accepts(str)
+def cert_from_file(filepath):
+    return load_pem_x509_certificate(open(filepath, 'rb'), default_backend())
+
 def symmetric_encrypt(msg, key):
     """Symmetrically encrypt a message and pack with IV using msgpack"""
     if msg and key:
@@ -181,12 +186,14 @@ def private_key_from_file(filepath, password=None):
 def private_key_from_str(private_key_str, password=None):
     """Load a PEM-formatted private key from a string and optionally decrypt"""
     if isinstance(private_key_str, str):
-        private_key_str = bytes(private_key_str, encoding='utf-8')
+        # private_key_str = bytes(private_key_str, encoding='utf-8')
+        private_key_str = bytes(private_key_str)
     elif isinstance(private_key_str, bytearray):
         private_key_str = bytes(private_key_str)
     if password:
         if isinstance(password, str):
-            password = bytes(password, encoding='utf-8')
+            # password = bytes(password, encoding='utf-8')
+            password = bytes(password)
         elif isinstance(password, bytearray):
             password = bytes(password)
     return load_pem_private_key(private_key_str,

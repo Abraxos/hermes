@@ -1,7 +1,15 @@
 # Setup Notes for TLS Fork of Hermes
 
 ```
-$ pip install twisted cryptography pyopenssl attr msgpack-python bcrypt
+$ mkvirtualenv hermes
+(hermes)$ pip install twisted cryptography pyopenssl attr msgpack-python bcrypt
+(hermes)$ add2virtualenv /path/to/parent/folder/of/hermes/
+```
+
+To run unit tests:
+
+```
+(hermes)$ trial hermes.test.test_identity_service
 ```
 
 ## Task Tracking

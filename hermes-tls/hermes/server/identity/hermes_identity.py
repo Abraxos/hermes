@@ -7,26 +7,26 @@ from OpenSSL.crypto import X509 # pylint: disable=E0401
 from twisted.internet import reactor # pylint: disable=E0401
 from twisted.internet.ssl import DefaultOpenSSLContextFactory # pylint: disable=E0401
 from twisted.internet.protocol import Factory, Protocol # pylint: disable=E0401
-import attr # pylint: disable=E0401
-from attr.validators import instance_of # pylint: disable=E0401
-from cryptography import x509
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+import attr
+from attr import validators, ib # pylint: disable=E0401
+from cryptography import x509 # pylint: disable=E0401
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey # pylint: disable=E0401
 
-from utils import log_debug, log_warning, log_info, log_error,accepts, unpack
-from utils import pack, pack_dict
-from crypto import password_verified, hash_salt, private_key_from_file
-from crypto import cert_from_csr, get_subject_name, get_issuer_name
-from hermes_constants import *
+from hermes.utils.utils import log_error, accepts, unpack # pylint: disable=E0401
+from hermes.utils.utils import pack # pylint: disable=E0401
+from hermes.crypto.crypto import password_verified, hash_salt, private_key_from_file # pylint: disable=E0401
+from hermes.crypto.crypto import cert_from_csr, get_issuer_name # pylint: disable=E0401
+from hermes.utils.constants import * # pylint: disable=E0401
 
 # TODO: Replace global users dictionary with a database connection for each protocol
 USERS = {}
 
 @attr.s
 class UserInfo(object):
-    username =              attr.ib(validator=instance_of(str))
-    hased_salted_pw =       attr.ib(validator=instance_of(str))
-    encrypted_private_key = attr.ib(validator=instance_of(str))
-    certificate =           attr.ib(validator=instance_of(X509))
+    username =              ib(validator=validators.instance_of(str))
+    hased_salted_pw =       ib(validator=validators.instance_of(str))
+    encrypted_private_key = ib(validator=validators.instance_of(str))
+    certificate =           ib(validator=validators.instance_of(X509))
 
 class HermesIdentityServerProtocol(Protocol):
     """HermesIdentityServerProtocol object which handles communication with a single client"""
@@ -151,7 +151,7 @@ class HermesIdentityServerProtocolFactory(Factory):
     protocol = HermesIdentityServerProtocol
     subject_info = None
 
-    @accepts(object, str)
+    @accepts(object, str, str)
     def __init__(self, private_key_filepath, subject_info):
         self.private_key = private_key_from_file(private_key_filepath)
         self.subject_info = subject_info
