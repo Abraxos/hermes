@@ -19,6 +19,7 @@ from hermes.crypto.crypto import password_verified, hash_salt
 from hermes.crypto.crypto import get_subject_name, private_key_from_file
 from hermes.crypto.crypto import cert_from_csr, get_issuer_name
 from hermes.crypto.crypto import deserialize_csr, serialize_csr
+from hermes.crypto.crypto import serialize_cert
 from hermes.utils.constants import * # pylint: disable=E0401
 
 # TODO: Replace global users dictionary with a database connection for each protocol
@@ -73,7 +74,7 @@ class HermesIdentityServerProtocol(Protocol):
             username = dict_obj[ID_MSG_KEY_USERNAME]
             if username in self.users:
                 self.send({ID_MSG_KEY_TYPE:ID_MSG_TYPE_FETCHED_CREDS,
-                           ID_MSG_KEY_CERT:self.users[username].certificate})
+                           ID_MSG_KEY_CERT:serialize_cert(self.users[username].certificate)})
             else:
                 self.error("No such user: {}".format(username))
         else:
@@ -89,7 +90,7 @@ class HermesIdentityServerProtocol(Protocol):
             if password_verified(password, user_info.hased_salted_pw):
                 self.send({ID_MSG_KEY_TYPE:ID_MSG_TYPE_YOUR_KEY_AND_CERT,
                            ID_MSG_KEY_ENC_PRIV:user_info.encrypted_private_key,
-                           ID_MSG_KEY_CERT:user_info.certificate})
+                           ID_MSG_KEY_CERT:serialize_cert(user_info.certificate)})
             else:
                 self.error("Invalid username or password")
         else:
@@ -112,7 +113,7 @@ class HermesIdentityServerProtocol(Protocol):
                                      encrypted_privkey, cert)
                 self.users[username] = user_info
                 self.send({ID_MSG_KEY_TYPE:ID_MSG_TYPE_NEW_CERT,
-                           ID_MSG_KEY_CERT:serialize_csr(cert)})
+                           ID_MSG_KEY_CERT:serialize_cert(cert)})
             else:
                 self.error(ID_MSG_ERROR_USERNAME_EXISTS)
         else:
@@ -145,7 +146,6 @@ class HermesIdentityServerProtocolFactory(Factory):
         self.private_key = private_key_from_file(private_key_filepath)
         self.subject_info = subject_info
 
-    @accepts(object)
     def buildProtocol(self, _):
         return HermesIdentityServerProtocol(self.private_key, self.subject_info)
 

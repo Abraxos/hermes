@@ -9,6 +9,7 @@ from hermes.client.hermes_identity_client import _fetch_request#, _fetch_my_requ
 from hermes.client.hermes_identity_client import _registration_request
 from hermes.server.identity.identity import HermesIdentityServerProtocolFactory
 from hermes.server.identity.identity import HermesIdentityServerProtocol
+from hermes.server.identity.identity import USERS
 
 TEST_SERVER_PRIVATE_KEY_FILEPATH = '/home/eugene/Development/hermes/hermes-tls/hermes/test/testing_keys/server/server.key'
 TEST_SERVER_SUBJECT_INFO = 'testing.hermes.messenger.com'
@@ -39,11 +40,30 @@ class IdentityServerTestCase(unittest.TestCase):
         self._test(fetch_request, {'type': 'error', 'error_msg': 'No such user: non_existent_username'})
 
     def test_registration(self):
+        if 'player1' not in self.proto.users:
+            def check_cert(_, result):
+                self.assertTrue('cert' in result)
+                self.assertTrue('type' in result)
+                self.assertEqual(result['type'], 'new_cert')
+                self.assertTrue(result['cert'].startswith('-----BEGIN CERTIFICATE-----'))
+                return True
+            registration_request = _registration_request('player1', 'password123', self.pk, 'letmein')
+            self._test(registration_request, None, check_cert)
+        else:
+            print("This test was already run successfully as part of another")
+
+    def test_registration_username_already_exists(self):
+        registration_request = _registration_request('player1', 'password123', self.pk, 'letmein')
+        self._test(registration_request, {'type': 'error', 'error_msg': 'username_already_exists'})
+
+    def test_fetch_existent_user(self):
         def check_cert(_, result):
             self.assertTrue('cert' in result)
             self.assertTrue('type' in result)
-            self.assertEqual(result['type'], 'new_cert')
+            self.assertEqual(result['type'], 'fetched_credentials')
             self.assertTrue(result['cert'].startswith('-----BEGIN CERTIFICATE-----'))
             return True
-        registration_request = _registration_request('player1', 'password123', self.pk, 'letmein')
-        self._test(registration_request, None, check_cert)
+        if 'player1' not in self.proto.users:
+            self.test_registration()
+        fetch_request = _fetch_request('player1')
+        self._test(fetch_request, None, check_cert)

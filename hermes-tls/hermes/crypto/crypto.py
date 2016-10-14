@@ -117,6 +117,9 @@ def generate_csr(key, username):
 def serialize_csr(csr):
     return csr.public_bytes(Encoding.PEM)
 
+def serialize_cert(cert):
+    return cert.public_bytes(Encoding.PEM)
+
 def deserialize_csr(csr_data):
     return x509.load_pem_x509_csr(csr_data, default_backend())
 
