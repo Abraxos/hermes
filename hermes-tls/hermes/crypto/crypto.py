@@ -33,6 +33,7 @@ from OpenSSL.crypto import load_publickey
 from OpenSSL.crypto import load_privatekey
 from OpenSSL.crypto import dump_publickey
 from OpenSSL.crypto import dump_privatekey
+from OpenSSL.crypto import dump_certificate_request
 from OpenSSL.crypto import FILETYPE_PEM
 from OpenSSL.crypto import PKey
 
@@ -99,21 +100,32 @@ def get_subject_name(username):
                          x509.NameAttribute(NameOID.ORGANIZATION_NAME,
                                             CLIENT_ORGANIZATION),
                          x509.NameAttribute(NameOID.COMMON_NAME,
-                                            username)])
+                                            unicode(username))])
     return subject
 
-def generate_csr(key, subject_name):
-    csr = x509.CertificateSigningRequestBuilder().subject_name(subject_name)\
+def generate_csr(key, username):
+    subject_name = get_subject_name(username)
+    if isinstance(key, PKey):
+        key = key.to_cryptography_key()
+        csr = x509.CertificateSigningRequestBuilder().subject_name(subject_name)\
+              .sign(key, SHA256(), default_backend())
+    elif isinstance(RSAPrivateKey):
+        csr = x509.CertificateSigningRequestBuilder().subject_name(subject_name)\
               .sign(key, SHA256(), default_backend())
     return csr
 
-@accepts(x509.Name, RSAPrivateKey, CertificateSigningRequest)
+def serialize_csr(csr):
+    return csr.public_bytes(Encoding.PEM)
+
+def deserialize_csr(csr_data):
+    return x509.load_pem_x509_csr(csr_data, default_backend())
+
 def cert_from_csr(issuer, key, csr):
     cert = x509.CertificateBuilder().subject_name(csr.subject
     ).issuer_name(issuer).public_key(
         key.public_key()
     ).serial_number(
-        x509.random_serial_number() # pylint: disable=E1101
+        int(urandom(19).encode('hex'), 16)
     ).not_valid_before(
         datetime.utcnow()
     ).not_valid_after(datetime.utcnow() + timedelta(days=3650)
@@ -160,12 +172,15 @@ def symmetric_decrypt(msg, key):
 def private_key_to_file(key, filepath, password=None):
     """Save a PEM-formatted private key to a file and optionally encrypt"""
     with open(filepath, "wb") as key_file:
-        if password:
-            key_file.write(dump_privatekey(FILETYPE_PEM, key,
-                                           cipher="AES256",
-                                           passphrase=password))
-        else:
-            key_file.write(dump_privatekey(FILETYPE_PEM, key))
+        key_file.write(private_key_to_str(key, password))
+
+def private_key_to_str(key, password=None):
+    if password:
+        return dump_privatekey(FILETYPE_PEM, key,
+                               cipher="AES256",
+                               passphrase=password)
+    else:
+        return dump_privatekey(FILETYPE_PEM, key)
 
 @accepts(PKey, str)
 def public_key_to_file(public_key, filepath):

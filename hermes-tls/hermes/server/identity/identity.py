@@ -10,13 +10,15 @@ from twisted.internet.ssl import DefaultOpenSSLContextFactory # pylint: disable=
 from twisted.internet.protocol import Factory, Protocol # pylint: disable=E0401
 import attr
 from attr import validators, ib # pylint: disable=E0401
-from cryptography import x509 # pylint: disable=E0401
+from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey # pylint: disable=E0401
 
 from hermes.utils.utils import log_error, accepts, unpack # pylint: disable=E0401
 from hermes.utils.utils import pack # pylint: disable=E0401
-from hermes.crypto.crypto import password_verified, hash_salt, private_key_from_file # pylint: disable=E0401
-from hermes.crypto.crypto import cert_from_csr, get_issuer_name # pylint: disable=E0401
+from hermes.crypto.crypto import password_verified, hash_salt
+from hermes.crypto.crypto import get_subject_name, private_key_from_file
+from hermes.crypto.crypto import cert_from_csr, get_issuer_name
+from hermes.crypto.crypto import deserialize_csr, serialize_csr
 from hermes.utils.constants import * # pylint: disable=E0401
 
 # TODO: Replace global users dictionary with a database connection for each protocol
@@ -27,7 +29,7 @@ class UserInfo(object):
     username =              ib(validator=validators.instance_of(str))
     hased_salted_pw =       ib(validator=validators.instance_of(str))
     encrypted_private_key = ib(validator=validators.instance_of(str))
-    certificate =           ib(validator=validators.instance_of(X509))
+    certificate =           ib(validator=validators.instance_of(x509.Certificate))
 
 class HermesIdentityServerProtocol(Protocol):
     """HermesIdentityServerProtocol object which handles communication with a single client"""
@@ -35,10 +37,10 @@ class HermesIdentityServerProtocol(Protocol):
     users = {} # dict{username:str : user:UserInfo}
     private_key = None
 
-    def __init__(self, private_key, subject_info):
+    def __init__(self, private_key, subject_info_str):
         self.users = USERS
-        self.private_key = private_key
-        self.subject_info = subject_info
+        self.private_key = private_key.to_cryptography_key()
+        self.subject_info = get_subject_name(subject_info_str)
 
     def send(self, msg):
         self.transport.write(pack(msg))
@@ -99,10 +101,10 @@ class HermesIdentityServerProtocol(Protocol):
                                         ID_MSG_KEY_PASSWORD,
                                         ID_MSG_KEY_CSR,
                                         ID_MSG_KEY_ENC_PRIV)):
-            username =          dict_obj[ID_MSG_KEY_USERNAME]
-            password =          dict_obj[ID_MSG_KEY_PASSWORD]
-            csr =               dict_obj[ID_MSG_KEY_CSR]
-            encrypted_privkey = dict_obj[ID_MSG_KEY_ENC_PRIV]
+            username =            dict_obj[ID_MSG_KEY_USERNAME]
+            password =            dict_obj[ID_MSG_KEY_PASSWORD]
+            csr = deserialize_csr(dict_obj[ID_MSG_KEY_CSR])
+            encrypted_privkey =   dict_obj[ID_MSG_KEY_ENC_PRIV]
             if username not in self.users:
                 cert = cert_from_csr(self.subject_info, self.private_key, csr)
                 hashed_salted_pw = hash_salt(password)
@@ -110,7 +112,7 @@ class HermesIdentityServerProtocol(Protocol):
                                      encrypted_privkey, cert)
                 self.users[username] = user_info
                 self.send({ID_MSG_KEY_TYPE:ID_MSG_TYPE_NEW_CERT,
-                           ID_MSG_KEY_CERT:cert})
+                           ID_MSG_KEY_CERT:serialize_csr(cert)})
             else:
                 self.error(ID_MSG_ERROR_USERNAME_EXISTS)
         else:
@@ -134,19 +136,6 @@ class HermesIdentityServerProtocol(Protocol):
         else:
             self.error('Invalid dictionary object')
 
-
-# @accepts(Connection, X509, int, int, int)
-# def verify_client(connection, x509, errnum, errdepth, auth_ok):
-#     """Verifies the identity of the client using SSL"""
-#     if not auth_ok:
-#         log_warning('Invalid Client Authentication: {0}\n\tConnection: {1}\n'\
-#                     '\tErrNum: {2} ErrDepth: {3}'.format(x509.get_subject(),
-#                                                          connection, errnum,
-#                                                          errdepth))
-#         return False
-#     log_info('Client Authentication Successful: {0}'.format(x509.get_subject()))
-#     return True
-
 class HermesIdentityServerProtocolFactory(Factory):
     protocol = HermesIdentityServerProtocol
     subject_info = None
@@ -157,7 +146,7 @@ class HermesIdentityServerProtocolFactory(Factory):
         self.subject_info = subject_info
 
     @accepts(object)
-    def buildProtocol(self):
+    def buildProtocol(self, _):
         return HermesIdentityServerProtocol(self.private_key, self.subject_info)
 
 @attr.s

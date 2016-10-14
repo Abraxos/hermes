@@ -8,6 +8,8 @@ from OpenSSL import SSL # pylint: disable=E0401
 from hermes.utils.utils import log_debug, log_warning, log_info, log_error, accepts, unpack
 from hermes.utils.utils import pack
 from hermes.utils.constants import *
+from hermes.crypto.crypto import serialize_csr, generate_csr
+from hermes.crypto.crypto import private_key_to_str
 
 @accepts(str)
 def _fetch_request(username):
@@ -20,14 +22,13 @@ def _fetch_my_request(username, password):
             ID_MSG_KEY_USERNAME : username,
             ID_MSG_KEY_PASSWORD : password}
 
-@accepts(str, str, str)
-def _registration_request(username, acct_password, key_password):
+def _registration_request(username, acct_password, key, key_password):
     """Helper function for generating registration request messages."""
     return {ID_MSG_KEY_TYPE : ID_MSG_TYPE_REGISTER,
             ID_MSG_KEY_USERNAME : username,
             ID_MSG_KEY_PASSWORD : acct_password,
-            ID_MSG_KEY_CSR : None, # TODO: generate CSR
-            ID_MSG_KEY_ENC_PRIV : None} # TODO: get encrypted private key
+            ID_MSG_KEY_CSR : serialize_csr(generate_csr(key, username)),
+            ID_MSG_KEY_ENC_PRIV : private_key_to_str(key, key_password)}
 
 class HermesIdentityClientProtocol(Protocol):
 
