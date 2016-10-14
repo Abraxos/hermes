@@ -1,9 +1,10 @@
 from __future__ import print_function
 from enum import IntEnum
-from OpenSSL.SSL import VERIFY_PEER # pylint: disable=E0401
-from OpenSSL.SSL import VERIFY_FAIL_IF_NO_PEER_CERT # pylint: disable=E0401
-from OpenSSL.SSL import Connection # pylint: disable=E0401
-from OpenSSL.crypto import X509 # pylint: disable=E0401
+from OpenSSL.SSL import VERIFY_PEER
+from OpenSSL.SSL import VERIFY_FAIL_IF_NO_PEER_CERT
+from OpenSSL.SSL import Connection
+from OpenSSL.crypto import X509
+from OpenSSL.crypto import PKey
 from twisted.internet import reactor # pylint: disable=E0401
 from twisted.internet.ssl import DefaultOpenSSLContextFactory # pylint: disable=E0401
 from twisted.internet.protocol import Factory, Protocol # pylint: disable=E0401
@@ -34,7 +35,6 @@ class HermesIdentityServerProtocol(Protocol):
     users = {} # dict{username:str : user:UserInfo}
     private_key = None
 
-    @accepts(object, RSAPrivateKey, x509.Name)
     def __init__(self, private_key, subject_info):
         self.users = USERS
         self.private_key = private_key

@@ -1,11 +1,10 @@
 """The cryptographic and message packing functions used by the Hermes-API"""
 from os import urandom
 from datetime import datetime, timedelta
-from cryptography.hazmat.backends import default_backend # pylint: disable=E0401
-from cryptography.hazmat.primitives.hashes import Hash # pylint: disable=E0401
-from cryptography.hazmat.primitives.hashes import SHA256 # pylint: disable=E0401
-from bcrypt import hashpw, gensalt # pylint: disable=E0401
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.hashes import Hash
+from cryptography.hazmat.primitives.hashes import SHA256
+from bcrypt import hashpw, gensalt
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.serialization import Encoding
@@ -30,6 +29,12 @@ from cryptography.x509 import load_pem_x509_certificate
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from hermes.utils.utils import pack, unpack, pack_values, accepts
+from OpenSSL.crypto import load_publickey
+from OpenSSL.crypto import load_privatekey
+from OpenSSL.crypto import dump_publickey
+from OpenSSL.crypto import dump_privatekey
+from OpenSSL.crypto import FILETYPE_PEM
+from OpenSSL.crypto import PKey
 
 SERVER_COUNTRY_NAME = u'US'
 SERVER_STATE = u'Denial'
@@ -67,6 +72,9 @@ def generate_asymmetric_key():
                                    backend=default_backend())
     return key
 
+def generate_asymmetric_openssl_key():
+    return PKey.from_cryptography_key(generate_asymmetric_key())
+
 def get_issuer_name():
     issuer = x509.Name([x509.NameAttribute(NameOID.COUNTRY_NAME,
                                            SERVER_COUNTRY_NAME),
@@ -80,6 +88,7 @@ def get_issuer_name():
                                            SERVER_COMMON_NAME)])
     return issuer
 
+@accepts(str)
 def get_subject_name(username):
     subject = x509.Name([x509.NameAttribute(NameOID.COUNTRY_NAME,
                                             CLIENT_COUNTRY_NAME),
@@ -132,7 +141,6 @@ def symmetric_encrypt(msg, key):
         ciphertext = encryptor.update(msg) + encryptor.finalize()
         return pack_values(iv=initialization_vector, ct=ciphertext)
 
-
 def symmetric_decrypt(msg, key):
     """Unpack 'iv' and 'ct' (ciphertext) values and symmetrically decrypt"""
     if msg and key:
@@ -149,39 +157,37 @@ def symmetric_decrypt(msg, key):
         plaintext = unpadder.update(padded_plaintext) + unpadder.finalize()
         return plaintext
 
-
 def private_key_to_file(key, filepath, password=None):
     """Save a PEM-formatted private key to a file and optionally encrypt"""
-    with open(filepath, "wb") as f:
+    with open(filepath, "wb") as key_file:
         if password:
-            f.write(key.private_bytes(encoding=Encoding.PEM,
-                                      format=PrivateFormat.TraditionalOpenSSL,
-                                      encryption_algorithm=BestAvailableEncryption(password)))
+            key_file.write(dump_privatekey(FILETYPE_PEM, key,
+                                           cipher="AES256",
+                                           passphrase=password))
         else:
-            f.write(key.private_bytes(encoding=Encoding.PEM,
-                                      format=PrivateFormat.TraditionalOpenSSL))
+            key_file.write(dump_privatekey(FILETYPE_PEM, key))
 
-
+@accepts(PKey, str)
 def public_key_to_file(public_key, filepath):
     """Save a PEM-formatted public key to a file"""
     with open(filepath, 'wb+') as pubkey_file:
-        pem = public_key_to_str(public_key)
-        pubkey_file.write(pem)
+        pubkey_file.write(dump_publickey(FILETYPE_PEM, public_key))
 
-
+@accepts(str)
 def public_key_from_file(filepath):
     """Load a PEM-formatted public key from a file"""
     with open(filepath, 'rb') as pubkey_file:
-        public_key = public_key_from_str(pubkey_file.read())
+        public_key = load_publickey(FILETYPE_PEM, pubkey_file.read())
     return public_key
-
 
 def private_key_from_file(filepath, password=None):
     """Load a PEM-formatted private key from a file and optionally decrypt"""
-    with open(filepath, 'rb') as privkey_file:
-        private_key = private_key_from_str(privkey_file.read(), password)
+    with open(filepath, "rb") as key_file:
+        if password:
+            private_key = load_privatekey(FILETYPE_PEM, key_file.read(), password)
+        else:
+            private_key = load_privatekey(FILETYPE_PEM, key_file.read())
     return private_key
-
 
 def private_key_from_str(private_key_str, password=None):
     """Load a PEM-formatted private key from a string and optionally decrypt"""

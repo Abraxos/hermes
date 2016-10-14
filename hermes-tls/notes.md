@@ -2,7 +2,7 @@
 
 ```
 $ mkvirtualenv hermes
-(hermes)$ pip install twisted cryptography pyopenssl attr msgpack-python bcrypt
+(hermes)$ pip install twisted cryptography pyopenssl attr msgpack-python bcrypt service_identity
 (hermes)$ add2virtualenv /path/to/parent/folder/of/hermes/
 ```
 
@@ -10,6 +10,18 @@ To run unit tests:
 
 ```
 (hermes)$ trial hermes.test.test_identity_service
+```
+
+### Setting Up Atom Development Environment
+
+```
+(hermes)$ pip install pylint
+```
+
+Then, in the pylint package settings in Atom, change the executable path to be the path for the pylint exectuable in your virtual env. For example:
+
+```
+/home/eugene/.virtualenvs/hermes/bin/pylint
 ```
 
 ## Task Tracking
