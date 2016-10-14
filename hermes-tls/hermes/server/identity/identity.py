@@ -86,11 +86,14 @@ class HermesIdentityServerProtocol(Protocol):
                                         ID_MSG_KEY_PASSWORD)):
             username = dict_obj[ID_MSG_KEY_USERNAME]
             password = dict_obj[ID_MSG_KEY_PASSWORD]
-            user_info = self.users[username]
-            if password_verified(password, user_info.hased_salted_pw):
-                self.send({ID_MSG_KEY_TYPE:ID_MSG_TYPE_YOUR_KEY_AND_CERT,
-                           ID_MSG_KEY_ENC_PRIV:user_info.encrypted_private_key,
-                           ID_MSG_KEY_CERT:serialize_cert(user_info.certificate)})
+            if username in self.users:
+                user_info = self.users[username]
+                if password_verified(password, user_info.hased_salted_pw):
+                    self.send({ID_MSG_KEY_TYPE:ID_MSG_TYPE_YOUR_KEY_AND_CERT,
+                               ID_MSG_KEY_ENC_PRIV:user_info.encrypted_private_key,
+                               ID_MSG_KEY_CERT:serialize_cert(user_info.certificate)})
+                else:
+                    self.error("Invalid username or password")
             else:
                 self.error("Invalid username or password")
         else:

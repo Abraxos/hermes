@@ -5,7 +5,8 @@ from twisted.test import proto_helpers
 from hermes.utils.utils import pack, unpack
 from hermes.crypto.crypto import private_key_from_file
 
-from hermes.client.hermes_identity_client import _fetch_request#, _fetch_my_request
+from hermes.client.hermes_identity_client import _fetch_request
+from hermes.client.hermes_identity_client import _fetch_my_request
 from hermes.client.hermes_identity_client import _registration_request
 from hermes.server.identity.identity import HermesIdentityServerProtocolFactory
 from hermes.server.identity.identity import HermesIdentityServerProtocol
@@ -67,3 +68,27 @@ class IdentityServerTestCase(unittest.TestCase):
             self.test_registration()
         fetch_request = _fetch_request('player1')
         self._test(fetch_request, None, check_cert)
+
+    def test_fetch_my(self):
+        def check_reply(_, result):
+            self.assertIn('cert', result)
+            self.assertIn('type', result)
+            self.assertIn('encrypted_privkey', result)
+            self.assertEqual(result['type'], 'your_key_and_cert')
+            self.assertTrue(result['cert'].startswith('-----BEGIN CERTIFICATE-----'))
+            self.assertTrue(result['encrypted_privkey'].startswith('-----BEGIN ENCRYPTED PRIVATE KEY-----'))
+            return True
+        if 'player1' not in self.proto.users:
+            self.test_registration()
+        fetch_request = _fetch_my_request('player1', 'password123')
+        self._test(fetch_request, None, check_reply)
+
+    def test_fetch_my_nonexistent_username(self):
+        fetch_request = _fetch_my_request('non_existent_username', 'password123')
+        self._test(fetch_request, {'type': 'error', 'error_msg': 'Invalid username or password'})
+
+    def test_fetch_my_bad_password(self):
+        if 'player1' not in self.proto.users:
+            self.test_registration()
+        fetch_request = _fetch_my_request('player1', 'wrong password')
+        self._test(fetch_request, {'type': 'error', 'error_msg': 'Invalid username or password'})
