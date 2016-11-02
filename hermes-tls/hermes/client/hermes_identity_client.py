@@ -4,7 +4,8 @@ from collections import namedtuple
 from twisted.internet import ssl, reactor # pylint: disable=E0401
 from twisted.internet.protocol import ClientFactory, Protocol # pylint: disable=E0401
 from twisted.internet.defer import Deferred # pylint: disable=E0401
-from OpenSSL import SSL # pylint: disable=E0401
+from OpenSSL import SSL
+from OpenSSL.crypto import PKey
 from hermes.utils.utils import log_debug, log_warning, log_info, log_error, accepts, unpack
 from hermes.utils.utils import pack
 from hermes.utils.constants import *
@@ -130,17 +131,18 @@ class HermesIdentityClientProtocol(Protocol):
         return self._fetch_my(username, acct_password).addCallback(received_credentials)
         # TODO: write errback as well
 
-    @accepts(object, str, str, str)
-    def _register(self, username, acct_password, key_password):
+    @accepts(object, str, str, PKey, str)
+    def _register(self, username, acct_password, key, key_password):
         """Helper function for sending a registration request to the server."""
         registration_request = _registration_request(username,
                                                      acct_password,
+                                                     key,
                                                      key_password)
         self.send(registration_request)
         self.d = Deferred()
         return self.d
 
-    def register(self, username, acct_password, key_password):
+    def register(self, username, acct_password, key, key_password):
         """Registers a new username to an identity server
 
         Given a username, account password, and private key encryption password,
@@ -182,6 +184,7 @@ class HermesIdentityClientProtocol(Protocol):
                     return None
         return self._register(username,
                               acct_password,
+                              key,
                               key_password).addCallback(received_certificate)
                               # TODO: write errback as well
 
@@ -206,3 +209,5 @@ class HermesIdentityClientFactory(ClientFactory):
         """A callback for handling lost connections"""
         log_warning("Connection lost - " + repr(reason))
         # reactor.stop()
+
+if __name__ == '__main__':

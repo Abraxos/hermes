@@ -8,12 +8,39 @@ from hermes.crypto.crypto import private_key_from_file
 from hermes.client.hermes_identity_client import _fetch_request
 from hermes.client.hermes_identity_client import _fetch_my_request
 from hermes.client.hermes_identity_client import _registration_request
+from hermes.client.hermes_identity_client import HermesIdentityClientFactory
+from hermes.client.hermes_identity_client import HermesIdentityClientProtocol
 from hermes.server.identity.identity import HermesIdentityServerProtocolFactory
 from hermes.server.identity.identity import HermesIdentityServerProtocol
 from hermes.server.identity.identity import USERS
 
 TEST_SERVER_PRIVATE_KEY_FILEPATH = '/home/eugene/Development/hermes/hermes-tls/hermes/test/testing_keys/server/server.key'
 TEST_SERVER_SUBJECT_INFO = 'testing.hermes.messenger.com'
+TEST_CLIENT_PRIVATE_KEY_FILEPATH = '/home/eugene/Development/hermes/hermes-tls/hermes/test/testing_keys/client/client.key'
+TEST_CLIENT_SUBJECT_INFO = 'player1'
+
+class IdentityClientTestCase(unittest.TestCase):
+    def setUp(self):
+        self.pk = private_key_from_file(TEST_CLIENT_PRIVATE_KEY_FILEPATH)
+        self.subject_info = TEST_CLIENT_SUBJECT_INFO
+        self.factory = HermesIdentityClientFactory()
+        self.tr = proto_helpers.StringTransportWithDisconnection()
+        self.proto = HermesIdentityClientProtocol(self.factory)
+        self.tr.protocol = self.proto
+        self.proto.makeConnection(self.tr)
+
+    def _test(self, expected_output, check_func=None):
+        print('CLIENT: {}'.format(unpack(self.tr.value())))
+        if not check_func:
+            self.assertEqual(expected_output, unpack(self.tr.value()))
+        else:
+            self.assertTrue(check_func(expected_output, unpack(self.tr.value())))
+        self.tr.clear()
+
+    def test_registration(self):
+        self.proto.register(self.subject_info, 'password123', self.pk, 'letmein')
+        print('CLIENT: {}'.format(unpack(self.tr.value())))
+
 
 class IdentityServerTestCase(unittest.TestCase):
     def setUp(self):

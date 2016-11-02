@@ -12,6 +12,7 @@ import attr
 from attr import validators, ib # pylint: disable=E0401
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey # pylint: disable=E0401
+from cryptography.x509.name import Name
 
 from hermes.utils.utils import log_error, accepts, unpack # pylint: disable=E0401
 from hermes.utils.utils import pack # pylint: disable=E0401
@@ -144,7 +145,7 @@ class HermesIdentityServerProtocolFactory(Factory):
     protocol = HermesIdentityServerProtocol
     subject_info = None
 
-    @accepts(object, str, str)
+    @accepts(object, str, Name)
     def __init__(self, private_key_filepath, subject_info):
         self.private_key = private_key_from_file(private_key_filepath)
         self.subject_info = subject_info
@@ -174,13 +175,13 @@ class HermesIdentityServer(object):
     def run_reactor(self):
         """Run the reactor using the context"""
         assert self.context is not None
-        reactor.listenSSL(self.port, self.factory, self.context_factory)
-        reactor.run()
+        reactor.listenSSL(self.port, self.factory, self.context_factory) # pylint: disable=E1101
+        reactor.run() # pylint: disable=E1101
 
 if __name__ == '__main__':
     SERVER = HermesIdentityServer(8000,
-                                  'testing_keys/server/server.key',
-                                  'testing_keys/server/server.cert',
-                                  'testing_keys/ca/ca.cert')
+                                  'hermes/test/testing_keys/server/server.key',
+                                  'hermes/test/testing_keys/server/server.cert',
+                                  'hermes/test/testing_keys/ca/ca.cert')
     SERVER.initialize()
     SERVER.run_reactor()

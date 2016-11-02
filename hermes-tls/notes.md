@@ -29,9 +29,9 @@ Then, in the pylint package settings in Atom, change the executable path to be t
 + Hermes Identity System
   + [ ] Write the Hermes Identity Server
     + [x] Write the identity server to handle CSRs and create certificates for users
-      + [ ] Test this functionality
+      + [x] Test this functionality
     + [ ] Update the Hermes ID Server to use a database
-    + [ ] Write unit tests
+    + [x] Write unit tests
     + [ ] Integrate the Hermes ID Server into a proper package and replace the existing Hermes code
   + [ ] Write the Hermes Identity Client functionality to connect with the server
     + [ ] Write a thread system that launches the reactor in a thread and provides convenient functionality for the UI
@@ -73,7 +73,7 @@ Protocol Tree:
         └── if the password is invalid the server terminates the connection
 ```
 
-### Hermes Invitation Server
+### Hermes Conversation Server
 
 This is the service that handles creating conversations and adding users to them. The client must authenticate using TLS in order to connect to this service. The service has two primary functionalities: to create new conversations and to add new users to those conversations. To that end it is also capable of sending messages to connected users to invite them to new conversations as well as handling leave requests when a user wants to leave a conversation.
 
