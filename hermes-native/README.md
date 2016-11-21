@@ -140,7 +140,7 @@ except ImportError:
 else:
 	coverage.process_startup()
 ```
-* To run coverage and generate a report, run the following commands from inside the /hermes-native/ directory:
+* <i>To run coverage and generate a report, run the following commands from inside the /hermes-native/ directory:</i>
 ```python
 python -m kivyunittest --folder "/home/vanya/Repos/hermes/hermes-native/tests"
 coverage combine
