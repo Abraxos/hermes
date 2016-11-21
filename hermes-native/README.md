@@ -141,7 +141,7 @@ else:
 	coverage.process_startup()
 ```
 * <i>To run coverage and generate a report, run the following commands from inside the /hermes-native/ directory:</i>
-```python
+```shell
 python -m kivyunittest --folder "/home/vanya/Repos/hermes/hermes-native/tests"
 coverage combine
 coverage report
