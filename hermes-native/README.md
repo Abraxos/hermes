@@ -63,12 +63,12 @@ python  messanger.py
 
 <h2>Unit-Testing</h2>
 
-<h3>KivyUnitTest</h3>
+<h6>KivyUnitTest</h6>
 <p> Use the follow script to run tests: https://github.com/KeyWeeUsr/KivyUnitTest . </p>
 ```
 pip install kivyunittest
 ```
-<p> Add new tests to the folder where you have messanger.py; The naming format for the test file is as followed. 'test_'+function_under_test+'.py'. Our functions should be concise units, meaning please don't have functions that do more than one thing. Also avoid testing wrappers, pipelines, or library codes. Unit test isn't mean't to be an integration test, that means tests aren't suppose to be dependent on a file system or database, use mocks and stubs where appropriate. Below I have included a general template for you to write tests.</p>
+<p> Add new tests to the test folder; The naming format for the test file is as followed. 'test_'+function_under_test+'.py'. Our functions should all be concise units, meaning don't have functions that do more than one thing. Also avoid testing wrappers, pipelines, or library codes. Unit test isn't mean't to be an integration test, tests aren't suppose to be dependent on a file system or database, use mocks and stubs where appropriate. Below I have included a general template for you to write tests.</p>
 
 ```python
 import unittest
@@ -115,22 +115,50 @@ if __name__ == '__main__':
     unittest.main()
 ```
 
-<p> If you want to test internals you will need to expose methods and functions, we will eventually wrap these codeblocks with if statement, so that it only runs in development or test environments.</p>
+<p> You should just need to fill Setup, Execute, Assert. If you want to test internals you will need to expose methods and functions, we will eventually wrap these codeblocks with if statement, so that it only runs in development or test environments.</p>
 
 ```python
 app = App.get_running_app()
 app.reference = what_I_want_to_test
 ```
 
-<h2>Style</h2>
+<h6>Coverage</h6>
+<p>Because KivyUnitTest is a testing suite that spawns subprocesses to do the actual tests you will need to set yourself up to be able to run coverage properly. I have outlined the steps on how to proceed below</p>
 
-<p>Currently all our stuff is in the kivy and python files called messanger. The kv file is some declarative code that specifies how the application will look. Refer to the kivy documentation to learn more about it. The py file maintains all our runnable code. There are a couple regions to it (we'll break it up into multiple files at some point): Firstly, you have the view items/sub-components region. Define all new Kivy classes you need here. Secondly, you have the main window, This is the root component which will nest all the other stuff you have. Inside of here you will have initalize, user actions, and internals. At the bottom you have the App Class which runs the code to create the MainWindow.</p>
+* <i>Create an environmental variable in your current shell, called COVERAGE_PROCESS_START, This variable will point to your coverage configuration file, which I have provided in the repository (.converagerc). To set it for current shell and all processes started from current shell, run:</i>
+```shell
+export COVERAGE_PROCESS_START="my value" 
+```
+* <i>To set it permanently for all future bash sessions add such line to your .bashrc file in your $HOME directory.</i>
+* <i>Next you want make a change to sitecustomize.py, it will be in /etc/python2.7. Inside that file append:</i>
+```python
+# added to be able to do coverage in subprocess (for kivyunittest)
+try:
+	import coverage
+except ImportError:
+	pass
+else:
+	coverage.process_startup()
+```
+* <i>To run coverage and generate a report, run the following commands from inside the /hermes-native/ directory:</i>
+```shell
+python -m kivyunittest --folder "/home/vanya/Repos/hermes/hermes-native/tests"
+coverage combine
+coverage report
+```
 
-* VIEW ITEMS/SUB-COMPONENTS
-* MAIN WINDOW
- * INITIALIZE -> Globals and initializations code
- * USER ACTIONS -> Wrappers for calling internals
- * INTERNALS -> Guts of the application
-* MESSANGER CLASS
+<h2>Basic Styleguide</h2>
+
+<p>Currently all our stuff is in the kivy and python files called messanger. The kv file is some declarative code that specifies how the application will look. Refer to the kivy documentation to learn more about it. The py file maintains all our runnable code. There are a couple regions to it (we'll break it up into multiple files at some point): Firstly, you have the view items/sub-components region. Define all new Kivy classes you need here. Secondly, you have the main window, This is the root component which will nest all the other stuff you have. Inside of here you will have initalize, user actions, and internals. At the bottom you have the App Class (Messanger) which runs the code to create the MainWindow.</p>
+
+* <i>VIEW ITEMS/SUB-COMPONENTS</i>
+* <i>MAIN WINDOW</i>
+ * <i>INITIALIZE -> Globals and initializations code</i>
+ * <i>USER ACTIONS -> Wrappers for calling internals</i>
+ * <i>INTERNALS -> Guts of the application</i>
+* <i>MESSANGER CLASS</i>
 
 <p> Some general stuff, I use camelBack only for naming classes. For methods and variables I use no_capitals_with_spaces. Also tabs over spaces, always.</p>
+
+<h2>Bugs, Complaints, and Questions</h2>
+<p> Post them in the issues section, I will try and respond as soon as possible.</p>
