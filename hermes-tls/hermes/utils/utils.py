@@ -1,4 +1,4 @@
-"""Common utilities for the Zeus Server"""
+"""Common utilities for the Hermes Messaging System"""
 from __future__ import print_function
 from sys import stderr
 from collections import namedtuple
@@ -65,12 +65,14 @@ def accepts(*types):
     """A type checking decorator that enforces the types that a function accepts"""
     def check_accepts(func):
         """A check for accepted types"""
-        assert len(types) == func.func_code.co_argcount
+        assert len(types) == func.func_code.co_argcount, \
+                "number of args for %s does not match" % func.__name__
         def new_f(*args, **kwds):
             """Generated function that does the type assertions"""
             for (arg, typ) in zip(args, types):
                 assert isinstance(arg, typ), \
-                       "arg %r does not match %s" % (arg, typ)
+                       "arg %r(%s) for function %s does not match %s" % \
+                       (arg, typeof(arg), func.__name__, typ)
             return func(*args, **kwds)
         new_f.func_name = func.func_name
         return new_f

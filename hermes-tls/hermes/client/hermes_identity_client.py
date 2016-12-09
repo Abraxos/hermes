@@ -155,13 +155,18 @@ class HermesIdentityClientProtocol(Protocol):
             username: The username that the user desires on a particular
                       identity server.
             acct_password: The password associated with the account the user
-                           wants to create. Note that this password should be assumed as being known to the server but is only used
+                           wants to create. Note that this password should be
+                           assumed as being known to the server but is only used
                            to verify user identity in lieu of certificates so
                            that the user can add new devices. All messages and
                            keys are encrypted using the other password.
             key_password: The password that is used to encrypt the private key
                           before they are sent to the server. This password
-                          should be extremely strong as the security of all messages sent through hermes is tied to this password. It should never be sent to the server. In this function it is used to open the private key for creating the CSR.
+                          should be extremely strong as the security of all
+                          messages sent through hermes is tied to this password.
+                          It should never be sent to the server. In this
+                          function it is used to open the private key for
+                          creating the CSR.
 
         Returns:
             A certificate, signed by the server acting as the CA if the server
@@ -211,3 +216,4 @@ class HermesIdentityClientFactory(ClientFactory):
         # reactor.stop()
 
 if __name__ == '__main__':
+    pass

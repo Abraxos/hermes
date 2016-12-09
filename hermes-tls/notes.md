@@ -1,5 +1,11 @@
 # Setup Notes for TLS Fork of Hermes
 
+## Pre-Requisites
+
+```
+$ sudo apt install virtualenvwrapper python-dev build-essential
+```
+
 ```
 $ mkvirtualenv hermes
 (hermes)$ pip install twisted cryptography pyopenssl attr msgpack-python bcrypt service_identity

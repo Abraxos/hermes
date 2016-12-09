@@ -145,7 +145,7 @@ class HermesIdentityServerProtocolFactory(Factory):
     protocol = HermesIdentityServerProtocol
     subject_info = None
 
-    @accepts(object, str, Name)
+    @accepts(object, str, str)
     def __init__(self, private_key_filepath, subject_info):
         self.private_key = private_key_from_file(private_key_filepath)
         self.subject_info = subject_info
@@ -178,10 +178,13 @@ class HermesIdentityServer(object):
         reactor.listenSSL(self.port, self.factory, self.context_factory) # pylint: disable=E1101
         reactor.run() # pylint: disable=E1101
 
+def run_identity_server(port, key_path, cert_path, ca_path):
+    server = HermesIdentityServer(port, key_path, cert_path, ca_path)
+    server.initialize()
+    server.run_reactor()
+
 if __name__ == '__main__':
-    SERVER = HermesIdentityServer(8000,
-                                  'hermes/test/testing_keys/server/server.key',
-                                  'hermes/test/testing_keys/server/server.cert',
-                                  'hermes/test/testing_keys/ca/ca.cert')
-    SERVER.initialize()
-    SERVER.run_reactor()
+    run_identity_server(8000,
+                        'hermes/test/testing_keys/server/server.key',
+                        'hermes/test/testing_keys/server/server.cert',
+                        'hermes/test/testing_keys/ca/ca.cert')
