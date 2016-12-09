@@ -112,6 +112,7 @@ def main():
     f = HermesIdentityClientFactory()
     cmd_protocol = CommandProtocol(f)
     StandardIO(cmd_protocol)
+    # TODO: Get SSL working here
     reactor.connectTCP("localhost", 8000, f)
     reactor.run()
 
