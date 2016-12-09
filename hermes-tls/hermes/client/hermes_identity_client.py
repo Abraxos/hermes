@@ -38,44 +38,44 @@ class HermesIdentityClientProtocol(Protocol):
         self.factory = factory
         self.d = None
 
-    def send(self, msg):
+    def _send(self, msg):
         """A function for packing and sending messages on the transport"""
         self.transport.write(pack(msg))
 
     @accepts(object, str)
-    def send_error(self, msg):
+    def _send_error(self, msg):
         """A function for sending error messages to the server."""
-        self.send({ID_MSG_KEY_TYPE:ID_MSG_TYPE_ERROR,
+        self._send({ID_MSG_KEY_TYPE:ID_MSG_TYPE_ERROR,
                    ID_MSG_KEY_ERROR_MSG:msg})
 
     @accepts(object, dict)
-    def error(self, msg):
+    def _error(self, msg):
         """Sends an error and terminates the connection"""
         log_error(msg)
-        self.send_error(msg)
+        self._send_error(msg)
         self.transport.loseConnection()
 
-    def dataReceived(self, data): # pylint: disable=C0103
+    def _dataReceived(self, data): # pylint: disable=C0103
         """A callback that handles receiving raw data and unpacking it"""
         msg_obj = unpack(data)
         if not msg_obj or not isinstance(msg_obj, dict):
-            self.error('Invalid packet')
+            self._error('Invalid packet')
         else:
-            self.dict_received(msg_obj)
+            self._dict_received(msg_obj)
 
     @accepts(object, dict)
-    def dict_received(self, dict_obj): # pylint: disable=R0201
+    def _dict_received(self, dict_obj):
         """A callback for verifying that a received dictionary is properly formatted and calling a callback on the current deferred"""
         if ID_MSG_KEY_TYPE in dict_obj:
             self.d.callback(dict_obj)
         else:
-            self.error('Invalid dictionary object')
+            self._error('Invalid dictionary object')
             log_warning('Invalid dictionary object')
 
     @accepts(object, str)
     def _fetch(self, username):
         fetch_request = _fetch_request(username)
-        self.send(fetch_request)
+        self._send(fetch_request)
         self.d = Deferred()
         return self.d
 
@@ -105,7 +105,7 @@ class HermesIdentityClientProtocol(Protocol):
     def _fetch_my(self, username, acct_password):
         """Helper function for sending a fetch_my request to the server"""
         fetch_request = _fetch_my_request(username, acct_password)
-        self.send(fetch_request)
+        self._send(fetch_request)
         self.d = Deferred()
         return self.d
 
@@ -138,7 +138,7 @@ class HermesIdentityClientProtocol(Protocol):
                                                      acct_password,
                                                      key,
                                                      key_password)
-        self.send(registration_request)
+        self._send(registration_request)
         self.d = Deferred()
         return self.d
 
@@ -197,22 +197,24 @@ class HermesIdentityClientFactory(ClientFactory):
     """The factory that handles generating protocol objects for the client to connect to servers"""
     protocol = HermesIdentityClientProtocol
     last_call_result = None
-
-    # def __init__(self, zeus_msg):
-    #     pass
+    protocols = []
 
     def buildProtocol(self, _): # pylint: disable=C0103
         """Protocol builder method"""
-        return self.protocol(self)
+        new_protocol = self.protocol(self)
+        self.protocols.append(new_protocol)
+        return new_protocol
 
-    def clientConnectionFailed(self, _, reason): # pylint: disable=C0103, R0201
+    def clientConnectionFailed(self, protocol, reason): # pylint: disable=C0103, R0201
         """A callback for handling failed connections"""
         log_warning("Connection lost - " + repr(reason))
+        self.protocols.remove(protocol)
         # reactor.stop()
 
-    def clientConnectionLost(self, _, reason): # pylint: disable=C0103, R0201
+    def clientConnectionLost(self, protocol, reason): # pylint: disable=C0103, R0201
         """A callback for handling lost connections"""
         log_warning("Connection lost - " + repr(reason))
+        self.protocols.remove(protocol)
         # reactor.stop()
 
 if __name__ == '__main__':

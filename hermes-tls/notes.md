@@ -2,9 +2,13 @@
 
 ## Pre-Requisites
 
+Basic packages:
+
 ```
 $ sudo apt install virtualenvwrapper python-dev build-essential
 ```
+
+Python-specific packages (inside the virtual environment):
 
 ```
 $ mkvirtualenv hermes
@@ -12,13 +16,29 @@ $ mkvirtualenv hermes
 (hermes)$ add2virtualenv /path/to/parent/folder/of/hermes/
 ```
 
+## Testing
+
 To run unit tests:
 
 ```
 (hermes)$ trial hermes.test.test_identity_service
 ```
 
-### Setting Up Atom Development Environment
+### Running The Example Client
+
+To run the example client you first need to start up the hermes identity server in one terminal, with a port, private key, cert, and certificate authority cert:
+
+```
+(hermes)$ python hermes/server/identity/hermes_id_server.py 8000 hermes/test/testing_keys/server/server.key hermes/test/testing_keys/server/server.cert hermes/test/testing_keys/ca/ca.cert
+```
+
+Then you can run the example client which currently only supports identity server functionality (full functionality coming soon):
+
+```
+(hermes)$ python hermes/examples/simple_registration_client_example.py localhost 8000
+```
+
+## Setting Up Atom Development Environment
 
 ```
 (hermes)$ pip install pylint
@@ -27,7 +47,7 @@ To run unit tests:
 Then, in the pylint package settings in Atom, change the executable path to be the path for the pylint exectuable in your virtual env. For example:
 
 ```
-/home/eugene/.virtualenvs/hermes/bin/pylint
+/home/<username>/.virtualenvs/hermes/bin/pylint
 ```
 
 ## Task Tracking
