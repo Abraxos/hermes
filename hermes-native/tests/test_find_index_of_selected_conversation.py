@@ -10,7 +10,7 @@ from kivy.clock import Clock
 main_path = op.dirname(op.dirname(op.abspath(__file__)))
 sys.path.append(main_path)
 
-from messanger import Messanger
+from messenger import Messenger
 
 class Test(unittest.TestCase):
     # sleep function that catches `dt` from Clock
@@ -37,7 +37,7 @@ class Test(unittest.TestCase):
 
     # same named function as the filename(!)
     def test_find_index_of_selected_conversation(self):
-        app = Messanger()
+        app = Messenger()
         p = partial(self.run_test, app)
         Clock.schedule_once(p, 0.000001)
         app.run()

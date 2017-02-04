@@ -54,11 +54,11 @@ pip install kivy
 ```
 pip install git+https://github.com/kivy/kivy.git@master
 ```
-<h3>Running the Messanger</h3>
-<p>Put messanger.kv and messanger.py in the same directory and run the line below whilst working on the virtualenv kivyinstall:</p>
+<h3>Running the Messenger</h3>
+<p>Put messenger.kv and messenger.py in the same directory and run the line below whilst working on the virtualenv kivyinstall:</p>
 
 ```
-python  messanger.py
+python  messenger.py
 ```
 
 <h2>Unit-Testing</h2>
@@ -68,7 +68,7 @@ python  messanger.py
 ```
 pip install kivyunittest
 ```
-<p> Add new tests to the folder where you have messanger.py; The naming format for the test file is as followed. 'test_'+function_under_test+'.py'. Our functions should be concise units, meaning please don't have functions that do more than one thing. Also avoid testing wrappers, pipelines, or library codes. Unit test isn't mean't to be an integration test, that means tests aren't suppose to be dependent on a file system or database, use mocks and stubs where appropriate. Below I have included a general template for you to write tests.</p>
+<p> Add new tests to the folder where you have messenger.py; The naming format for the test file is as followed. 'test_'+function_under_test+'.py'. Our functions should be concise units, meaning please don't have functions that do more than one thing. Also avoid testing wrappers, pipelines, or library codes. Unit test isn't mean't to be an integration test, that means tests aren't suppose to be dependent on a file system or database, use mocks and stubs where appropriate. Below I have included a general template for you to write tests.</p>
 
 ```python
 import unittest
@@ -83,7 +83,7 @@ from kivy.clock import Clock
 main_path = op.dirname(op.dirname(op.abspath(__file__)))
 sys.path.append(main_path)
 
-from messanger import Messanger
+from messenger import Messenger
 
 class Test(unittest.TestCase):
     # sleep function that catches `dt` from Clock
@@ -106,7 +106,7 @@ class Test(unittest.TestCase):
 
     # same named function as the filename(!)
     def test_function(self):
-        app = Messanger()
+        app = Messenger()
         p = partial(self.run_test, app)
         Clock.schedule_once(p, 0.000001)
         app.run()
@@ -124,13 +124,13 @@ app.reference = what_I_want_to_test
 
 <h2>Style</h2>
 
-<p>Currently all our stuff is in the kivy and python files called messanger. The kv file is some declarative code that specifies how the application will look. Refer to the kivy documentation to learn more about it. The py file maintains all our runnable code. There are a couple regions to it (we'll break it up into multiple files at some point): Firstly, you have the view items/sub-components region. Define all new Kivy classes you need here. Secondly, you have the main window, This is the root component which will nest all the other stuff you have. Inside of here you will have initalize, user actions, and internals. At the bottom you have the App Class which runs the code to create the MainWindow.</p>
+<p>Currently all our stuff is in the kivy and python files called messenger. The kv file is some declarative code that specifies how the application will look. Refer to the kivy documentation to learn more about it. The py file maintains all our runnable code. There are a couple regions to it (we'll break it up into multiple files at some point): Firstly, you have the view items/sub-components region. Define all new Kivy classes you need here. Secondly, you have the main window, This is the root component which will nest all the other stuff you have. Inside of here you will have initalize, user actions, and internals. At the bottom you have the App Class which runs the code to create the MainWindow.</p>
 
 * VIEW ITEMS/SUB-COMPONENTS
 * MAIN WINDOW
  * INITIALIZE -> Globals and initializations code
  * USER ACTIONS -> Wrappers for calling internals
  * INTERNALS -> Guts of the application
-* MESSANGER CLASS
+* MESSENGER CLASS
 
 <p> Some general stuff, I use camelBack only for naming classes. For methods and variables I use no_capitals_with_spaces. Also tabs over spaces, always.</p>

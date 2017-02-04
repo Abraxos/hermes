@@ -1,0 +1,193 @@
+#:import SlideTransition kivy.uix.screenmanager.SlideTransition
+
+<MainWindow>:
+	cols: 2
+	rows: 2
+	RecycleView:
+		id: conversation_list
+		size_hint_x: None
+		size_hint_y: 1
+		width: 200
+		scroll_type: ['bars','content']
+		scroll_wheel_distance: 100
+		bar_width: 10
+		viewclass: 'ConversationListItemView'
+		RecycleBoxLayout:
+			default_size: None, 100
+			default_size_hint: 1, None
+			size_hint_y: None
+			height: self.minimum_height
+			orientation: 'vertical'
+			spacing: 0
+
+	ScreenManager:
+		id: screen_controls
+		size_hint_x: 1
+		size_hint_y: 1
+		transistion: SlideTransition
+		SettingScreen:
+		ContactsScreen:
+		AddConversationScreen:
+
+	BoxLayout:
+		id: general_controls
+		size_hint_x: None
+		size_hint_y: None
+		width: 200
+		height: 60
+		Button:
+			id: go_to_menu
+			text: 'settings'
+			on_press: root.transition(0)
+		Button:
+			id: go_to_contacts
+			text: 'contacts'
+			on_press: root.transition(1)
+
+	BoxLayout:
+		id: input_controls
+		orientation: 'vertical'
+		size_hint_x: 0.8
+		size_hint_y: None
+		height: 60
+		BoxLayout:
+			id: conversation_controls
+			height: 24
+			Button:
+				id: add
+				text: 'add'
+				size_hint_x: None
+				width: 100
+				on_press: root.transition(2)
+			Button:
+				id: leave
+				text: 'leave'
+				size_hint_x: None
+				width: 100
+				on_press: root.leave_conversation()
+			Button:
+				size_hint_x: 1
+		BoxLayout:
+			id: message_controls
+			height: 36
+			BoxLayout:
+				id: text_entry_container
+				size_hint_x: 1
+				size_hint_y: None
+				height: min(text_entry.line_height * 5, 16 * (len(text_entry._lines)+1))
+				TextInput:
+					id: text_entry
+					text: ""
+					font_size: 16
+					size_hint_x: None
+					size_hint_y: None
+					width: text_entry_container.width
+					height: max( (len(self._lines)+1) * 16, text_entry_container.height)
+			Button:
+				id: send
+				size_hint_x: None
+				width: 50
+				text: 'send'
+				on_press: root.send_message()
+
+<ConversationScreen>:
+	BoxLayout:
+		name: root.name
+		orientation: 'vertical'
+		BoxLayout:
+			id: chat_info
+			orientation: 'horizontal'
+			size_hint_y: None
+			height: 50
+			Button:
+				id: top_left_banner
+			Button:
+				id: conversation_avatar
+				size_hint_x: None
+				width: 50
+			Button:
+				id: conversation_name
+				text: root.name
+				size_hint_x: None
+				width: 150
+			Button:
+				id: conversation_settings
+				text: 'conversation settings'
+				size_hint_x: None
+				width: 150
+			Button:
+		RecycleView:
+			id: chat_log
+			size_hint_x: 1
+			size_hint_y: 1
+			scroll_type: ['bars','content']
+			scroll_wheel_distance: 100
+			bar_width: 10
+			viewclass: 'MessageView'
+			RecycleBoxLayout:
+				default_size: None, 100
+				default_size_hint: 1, None
+				size_hint_x: 1
+				size_hint_y: None
+				height: self.minimum_height
+				orientation: 'vertical'
+				spacing: 0
+
+<SettingScreen>:
+	name: 'settings'
+	BoxLayout:
+		orientation: 'vertical'
+		Button:
+			text: 'Settings'
+			on_release: app.open_settings()
+
+<AddConversationScreen>:
+	name: 'add'
+	Settings:
+		orientation: 'vertical'
+		Button:
+			text: 'Create Conversation'
+			on_release: root.parent.parent.new_conversation()
+		Button:
+			text: 'Join Conversation'
+			on_release: root.parent.parent.join_conversation()
+
+<ContactsScreen>:
+	name: 'contacts'
+	Label:
+		text: 'contacts'
+
+<MessageView@SelectableView+BoxLayout>:
+	name: 'message_container'
+	orientation: 'horizontal'
+	size_hint_x: 1
+	size_hint_y: None
+	height: max(user_avatar.height,message.texture_size[1])
+	text: ''
+	UserAvatar:
+		id: user_avatar
+		name: 'user_avatar'
+		size_hint_x: None
+		size_hint_y: None
+		width: 100
+		height: 100
+		# Okay, Honestly, this is a bit ridiculious and needs to be fixed.
+		on_press: root.parent.parent.parent.parent.parent.parent.press_message_list_item(user_avatar.name)
+	MessageTextBox:
+		id: message
+		name: 'message'
+		size_hint_x: 1
+		size_hint_y: None
+		text_size: self.width, None
+		height: max(user_avatar.height,self.texture_size[1])
+		text: root.text
+		# Okay, Honestly, this is a bit ridiculious and needs to be fixed.
+		on_press: root.parent.parent.parent.parent.parent.parent.press_message_list_item(message.name)
+
+<ConversationListItemView@SelectableView+Button>:
+	name: 'conversation_list_item_container'
+	size_hint_y: None
+	# Okay, Honestly, this is a bit ridiculious and needs to be fixed.
+	on_press: root.parent.parent.parent.select_transition(root.text)
+	height: 100
+	text: ''
