@@ -11,6 +11,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
+from kivy.uix.dropdown import DropDown
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.adapters.listadapter import ListAdapter
 from kivy.clock import Clock
@@ -44,6 +45,12 @@ class ConversationScreen(Screen):
         pass
 
 class AddConversationScreen(Screen):
+        pass
+
+class CreateConversation(BoxLayout):
+        pass
+
+class JoinConversation(BoxLayout):
         pass
 
 class ContactsScreen(Screen):

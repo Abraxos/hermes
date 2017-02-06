@@ -1,0 +1,26 @@
+<MessageView@SelectableView+BoxLayout>:
+	name: 'message_container'
+	orientation: 'horizontal'
+	size_hint_x: 1
+	size_hint_y: None
+	height: max(user_avatar.height,message.texture_size[1])
+	text: ''
+	UserAvatar:
+		id: user_avatar
+		name: 'user_avatar'
+		size_hint_x: None
+		size_hint_y: None
+		width: 100
+		height: 100
+		# Okay, Honestly, this is a bit ridiculious and needs to be fixed.
+		on_press: root.parent.parent.parent.parent.parent.parent.press_message_list_item(user_avatar.name)
+	MessageTextBox:
+		id: message
+		name: 'message'
+		size_hint_x: 1
+		size_hint_y: None
+		text_size: self.width, None
+		height: max(user_avatar.height,self.texture_size[1])
+		text: root.text
+		# Okay, Honestly, this is a bit ridiculious and needs to be fixed.
+		on_press: root.parent.parent.parent.parent.parent.parent.press_message_list_item(message.name)

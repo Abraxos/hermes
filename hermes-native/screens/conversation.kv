@@ -1,0 +1,42 @@
+<ConversationScreen>:
+	BoxLayout:
+		name: root.name
+		orientation: 'vertical'
+		BoxLayout:
+			id: chat_info
+			orientation: 'horizontal'
+			size_hint_y: None
+			height: 50
+			Button:
+				id: top_left_banner
+			Button:
+				id: conversation_avatar
+				size_hint_x: None
+				width: 50
+			Button:
+				id: conversation_name
+				text: root.name
+				size_hint_x: None
+				width: 150
+			Button:
+				id: conversation_settings
+				text: 'conversation settings'
+				size_hint_x: None
+				width: 150
+			Button:
+		RecycleView:
+			id: chat_log
+			size_hint_x: 1
+			size_hint_y: 1
+			scroll_type: ['bars','content']
+			scroll_wheel_distance: 100
+			bar_width: 10
+			viewclass: 'MessageView'
+			RecycleBoxLayout:
+				default_size: None, 100
+				default_size_hint: 1, None
+				size_hint_x: 1
+				size_hint_y: None
+				height: self.minimum_height
+				orientation: 'vertical'
+				spacing: 0

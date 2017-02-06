@@ -1,0 +1,11 @@
+#:include screens/add_create.kv
+#:include screens/add_join.kv
+<AddConversationScreen>:
+	name: 'add'
+	ScrollView:
+		BoxLayout:
+			size_hint_y: None
+			height: 1000
+			orientation: 'vertical'
+			CreateConversation:
+			JoinConversation:
