@@ -13,7 +13,7 @@
 		width: 100
 		height: 100
 		# Okay, Honestly, this is a bit ridiculious and needs to be fixed.
-		on_press: root.parent.parent.parent.parent.parent.parent.press_message_list_item(user_avatar.name)
+		on_press: root.find_main_window().press_message_list_item(user_avatar.name)
 	MessageTextBox:
 		id: message
 		name: 'message'
@@ -23,4 +23,4 @@
 		height: max(user_avatar.height,self.texture_size[1])
 		text: root.text
 		# Okay, Honestly, this is a bit ridiculious and needs to be fixed.
-		on_press: root.parent.parent.parent.parent.parent.parent.press_message_list_item(message.name)
+		on_press: root.find_main_window().press_message_list_item(message.name)

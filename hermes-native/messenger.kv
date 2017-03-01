@@ -2,11 +2,14 @@
 #:include lists/conversation.kv
 #:include lists/message.kv
 #:include screens/add.kv
+#:include screens/login.kv
+#:include screens/register.kv
 #:include screens/contacts.kv
 #:include screens/settings.kv
 #:include screens/conversation.kv
 
 <MainWindow>:
+	name: 'main_window'
 	cols: 2
 	rows: 2
 	RecycleView:
@@ -31,6 +34,8 @@
 		size_hint_x: 1
 		size_hint_y: 1
 		transistion: SlideTransition
+		LoginScreen:
+		RegisterScreen:
 		SettingScreen:
 		ContactsScreen:
 		AddConversationScreen:
@@ -44,11 +49,11 @@
 		Button:
 			id: go_to_menu
 			text: 'settings'
-			on_press: root.transition(0)
+			on_press: root.force_transition(2)
 		Button:
 			id: go_to_contacts
 			text: 'contacts'
-			on_press: root.transition(1)
+			on_press: root.force_transition(3)
 
 	BoxLayout:
 		id: input_controls
@@ -64,7 +69,7 @@
 				text: 'add'
 				size_hint_x: None
 				width: 100
-				on_press: root.transition(2)
+				on_press: root.force_transition(4)
 			Button:
 				id: leave
 				text: 'leave'
@@ -94,4 +99,4 @@
 				size_hint_x: None
 				width: 50
 				text: 'send'
-				on_press: root.send_message()
+				on_press: root.send_message(text_entry.text)

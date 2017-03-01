@@ -1,0 +1,50 @@
+<LoginScreen>:
+	name: 'login'
+	form_label_width: 175
+	form_input_width: 300
+	form_entry_height: 30
+    BoxLayout:
+        size_hint_y: 1
+    	orientation: 'vertical'
+        Label:
+            size_hint_y: 1
+    	Label:
+    		text: "Login"
+    		font_size: 50
+    		height: 100
+            size_hint_y: None
+    	BoxLayout:
+    		orientation: 'horizontal'
+    		size_hint_y: None
+    		height: root.form_entry_height
+    		Label:
+    			size_hint_x: 1
+    		Label:
+    			size_hint_x: None
+    			width: root.form_label_width
+    			text: 'Passphrase'
+    		TextInput:
+				id: passphrase_field
+    			size_hint_x: None
+    			width: root.form_input_width
+    			multiline: False
+				text: ""
+				password: True
+				password_mask: '*'
+    		Label:
+    			size_hint_x: 1
+    	BoxLayout:
+    		Label:
+    			size_hint_x: 1
+    		Button:
+    			font_size: 30
+    			size_hint_x: None
+    			size_hint_y: None
+    			height: 40
+    			width: 200
+    			text: 'Submit'
+    			on_release: root.find_main_window().login(passphrase_field.text)
+    		Label:
+    			size_hint_x: 1
+        Label:
+            size_hint_y: 1

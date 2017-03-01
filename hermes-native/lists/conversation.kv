@@ -2,6 +2,6 @@
 	name: 'conversation_list_item_container'
 	size_hint_y: None
 	# Okay, Honestly, this is a bit ridiculious and needs to be fixed.
-	on_press: root.parent.parent.parent.select_transition(root.text)
+	on_press: root.find_main_window().select_transition(root.text)
 	height: 100
 	text: ''
