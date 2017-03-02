@@ -156,26 +156,30 @@ class MainWindow(GridLayout):
         """send a message to converation."""
         app = App.get_running_app()
         current_user = 'Ivan Pozdnyakov'
+        current_conversation = self.screens[self.current_screen_index][1]
         if text_input and app.connection:
             app.connection.write(str(text_input))
-            self.post_message(current_user, text_input)
+            self.post_message(current_user, current_conversation, text_input)
             self.update_conversation_log()
 
-    def recieve_message(self, data):
+    def recieve_message(self, text_recieved):
         """recieve a message from the converation."""
         peer_user = 'Shadow Ivan Pozdnyakov'
-        self.post_message(peer_user, data)
+        current_conversation = self.screens[self.current_screen_index][1]
+        self.post_message(peer_user, current_conversation, text_recieved)
         self.update_conversation_log()
 
     # conversation controls
     def new_conversation(self):
         """create a converation."""
-        self.add_conversation_visually()
+        name = "conversation_"+str(self.latest_screen_id)
+        self.add_conversation_visually(name)
         self.create_conversation_log()
 
     def join_conversation(self):
         """join a converation."""
-        self.add_conversation_visually()
+        name = "conversation_"+str(self.latest_screen_id)
+        self.add_conversation_visually(name)
         self.create_conversation_log()
 
     def leave_conversation(self):
@@ -235,10 +239,18 @@ class MainWindow(GridLayout):
 
     def unlock(self):
         for log in os.listdir('archive'):
-            if log.endsWith('.log'):
+            if log.endswith('.log'):
                 with open('archive/'+log, 'r') as f:
-                    cipher = f.read()
-                    clear = self.fernet.decrypt(cipher)
+                    read_title = True
+                    for cipher in f:
+                        clear = self.fernet.decrypt(cipher)
+                        if read_title:
+                            self.add_conversation_visually(clear)
+                            read_title = False
+                        else:
+                            message = clear.split(':\n')
+                            conversation = self.screens[len(self.screens)-1][1]
+                            self.post_message(message[0],conversation,message[1])
         self.no_login = False
         self.force_transition(2)
 
@@ -248,9 +260,8 @@ class MainWindow(GridLayout):
         key = base64.urlsafe_b64encode(kdf.derive(unicode.encode(passphrase)))
         self.fernet = Fernet(key)
 
-    def post_message(self, current_user, text_input):
+    def post_message(self, current_user, current_conversation, text_input):
         """visually display any new messages."""
-        current_conversation = self.screens[self.current_screen_index][1]
         if current_conversation is not None and text_input != '':
             message_log = self.screens[self.current_screen_index][2]
             message_log.append({'text': current_user+':\n'+text_input})
@@ -329,9 +340,8 @@ class MainWindow(GridLayout):
             self.current_screen_index = too
             screen_controls.current = self.screens[too][0]
 
-    def add_conversation_visually(self):
+    def add_conversation_visually(self,name):
         """Visually add a new conversation screen."""
-        name = "conversation_"+str(self.latest_screen_id)
         new_conversation_screen = ConversationScreen(name=name)
 
         self.current_screen_index = len(self.screens)
@@ -367,15 +377,15 @@ class MainWindow(GridLayout):
     def update_conversation_log(self):
         """Update the local conversation log with latest message."""
         with open('archive/'+self.screens[self.current_screen_index][0]+'_conversation.log', 'a') as outfile:
-            entry = self.screens[self.current_screen_index][2][-1]['text'] + '\n'
-            outfile.write(self.fernet.encrypt(entry))
+            entry = self.screens[self.current_screen_index][2][-1]['text']
+            outfile.write(self.fernet.encrypt(bytes(entry))+'\n')
 
     # Will create a converation
     def create_conversation_log(self):
         """Create the local conversation log, first line will have some meta-data."""
         with open('archive/'+self.screens[self.current_screen_index][0]+'_conversation.log', 'a') as outfile:
-            entry = self.screens[self.current_screen_index][0] + '\n'
-            outfile.write(self.fernet.encrypt(entry))
+            entry = self.screens[self.current_screen_index][0]
+            outfile.write(self.fernet.encrypt(entry)+ '\n')
 
 # APPLICATION
 # contains everything else that is defined
