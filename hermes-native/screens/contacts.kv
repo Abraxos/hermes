@@ -1,4 +1,12 @@
+#:include screens/contacts_list.kv
+#:include screens/contacts_add.kv
 <ContactsScreen>:
 	name: 'contacts'
-	Label:
-		text: 'contacts'
+	ScrollView:
+		BoxLayout:
+			size_hint_y: None
+			height: 1000
+			orientation: 'vertical'
+			ContactsAdd:
+			ContactsList:
+				id: contact_list_container

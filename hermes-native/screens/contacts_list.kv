@@ -1,0 +1,24 @@
+<ContactsList>
+    orientation: 'vertical'
+    Label:
+        font_size: 50
+        height: 100
+        size_hint_x: 1
+        size_hint_y: None
+        text: "Contacts"
+	RecycleView:
+		id: contact_list
+		size_hint_x: None
+		size_hint_y: 1
+		width: 200
+		scroll_type: ['bars','content']
+		scroll_wheel_distance: 100
+		bar_width: 10
+		viewclass: 'ContactView'
+		RecycleBoxLayout:
+			default_size: None, 100
+			default_size_hint: 1, None
+			size_hint_y: None
+			height: self.minimum_height
+			orientation: 'vertical'
+			spacing: 0

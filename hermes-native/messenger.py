@@ -64,6 +64,10 @@ class MessageView(SelectableView, BoxLayout, MessengerUtility):
     """Message container element."""
     pass
 
+class ContactView(SelectableView, Button, MessengerUtility):
+    """Contact list item element."""
+    pass
+
 class ConversationListItemView(SelectableView, Button, MessengerUtility):
     """Conversation list item element."""
     pass
@@ -82,6 +86,14 @@ class CreateConversation(BoxLayout, MessengerUtility):
 
 class JoinConversation(BoxLayout, MessengerUtility):
     """Form for conversation joining."""
+    pass
+
+class ContactsList(BoxLayout, MessengerUtility):
+    """contact list."""
+    pass
+
+class ContactsAdd(BoxLayout, MessengerUtility):
+    """Form for adding contacts."""
     pass
 
 class ContactsScreen(Screen, MessengerUtility):
@@ -110,8 +122,6 @@ class MainWindow(GridLayout):
     # I'm not sure if kivy maintains a record of screens, their ordered, and
     # current one in view, if it does then the
     # three globals below are totally unnecessary and can be refractored out.
-    screens = []
-    current_screen_index = 0
     latest_screen_id = 0
 
     # These handle global logic for whether you are logged in/etc
@@ -141,12 +151,12 @@ class MainWindow(GridLayout):
     def register(self,passphrase,reenter_passphrase):
         """register."""
         if passphrase != reenter_passphrase:
-            self.display_error('register error','Passphrases not matchings, try again.')
+            self.display_error('register error', 'Passphrases not matchings, try again.')
         elif len(passphrase) < 15:
-            self.display_error('register error','Passphrases less than 15 characters, try again.')
+            self.display_error('register error', 'Passphrases less than 15 characters, try again.')
         else:
-            self.no_passphrase = False
             salt = os.urandom(16)
+            self.no_passphrase = False
             self.init_fernet(salt,passphrase)
             self.populate_archive(salt)
             self.unlock()
@@ -154,9 +164,10 @@ class MainWindow(GridLayout):
     # message controls
     def send_message(self,text_input):
         """send a message to converation."""
+        screen_controls = self.ids['screen_controls']
         app = App.get_running_app()
         current_user = 'Ivan Pozdnyakov'
-        current_conversation = self.screens[self.current_screen_index][1]
+        current_conversation = screen_controls.get_screen(screen_controls.current_screen)
         if text_input and app.connection:
             app.connection.write(str(text_input))
             self.post_message(current_user, current_conversation, text_input)
@@ -165,7 +176,8 @@ class MainWindow(GridLayout):
     def recieve_message(self, text_recieved):
         """recieve a message from the converation."""
         peer_user = 'Shadow Ivan Pozdnyakov'
-        current_conversation = self.screens[self.current_screen_index][1]
+        screen_controls = self.ids['screen_controls']
+        current_conversation = screen_controls.get_screen(screen_controls.current)
         self.post_message(peer_user, current_conversation, text_recieved)
         self.update_conversation_log()
 
@@ -194,6 +206,16 @@ class MainWindow(GridLayout):
         elif selection == 'user_avatar':
             self.selected_view_profile()
 
+    # contact screen controls
+    def add_contact(self, username):
+        self.add_contact_visually(username)
+
+    def delete_contact(self):
+        pass
+
+    def invite_contact(self):
+        pass
+
     # INTERNALS
     def display_error(self,error,message):
         content = GridLayout(cols=1)
@@ -211,18 +233,12 @@ class MainWindow(GridLayout):
         """A call back for when the application is finished initializing."""
         # Application core will set these based on user data
         self.ids['conversation_list'].data = [{'text': item.name} for item in []]
-        self.screens.append(('login', None))
-        self.screens.append(('register', None))
-        self.screens.append(('settings', None))
-        self.screens.append(('contacts', None))
-        self.screens.append(('add', None))
         self.latest_screen_id = 0
         self.no_passphrase = self.archive_not_populated()
         if(self.no_passphrase):
-            self.current_screen_index = 1
+            self.force_transition('register')
         else:
-            self.current_screen_index = 0
-        self.force_transition(self.current_screen_index)
+            self.force_transition('login')
 
     def archive_not_populated(self):
         """check whether the archive folder is populated."""
@@ -248,11 +264,12 @@ class MainWindow(GridLayout):
                             self.add_conversation_visually(clear)
                             read_title = False
                         else:
+                            screen_controls = self.ids['screen_controls']
                             message = clear.split(':\n')
-                            conversation = self.screens[len(self.screens)-1][1]
+                            conversation = screen_controls.get_screen(screen_controls.current)
                             self.post_message(message[0],conversation,message[1])
         self.no_login = False
-        self.force_transition(2)
+        self.force_transition('settings')
 
     def init_fernet(self,salt,passphrase):
         """initialize our fernet global, which we can use for encryption/decryption."""
@@ -263,7 +280,7 @@ class MainWindow(GridLayout):
     def post_message(self, current_user, current_conversation, text_input):
         """visually display any new messages."""
         if current_conversation is not None and text_input != '':
-            message_log = self.screens[self.current_screen_index][2]
+            message_log = current_conversation.ids['chat_log'].data
             message_log.append({'text': current_user+':\n'+text_input})
             current_conversation.ids['chat_log'].data = message_log
 
@@ -306,22 +323,12 @@ class MainWindow(GridLayout):
         app = App.get_running_app()
         app.profile_control = content
 
-    def find_index_of_conversation(self, selection):
-        """Figure out what screen was selected (may need refractoring)."""
-        idx = 0
-        for screen in self.screens:
-            if screen[0] == selection:
-                self.current_screen_index = idx
-            idx += 1
-
     def select_transition(self, selection):
+        print(selection)
         """Do a visual transition on conversation select."""
-        for obj in self.screens:
-            if obj[0] == selection:
-                screen_controls = self.ids['screen_controls']
-                screen_controls.transition.direction = 'up'
-                screen_controls.current = selection
-                self.find_index_of_conversation(selection)
+        screen_controls = self.ids['screen_controls']
+        screen_controls.transition.direction = 'up'
+        screen_controls.current = selection
 
     def force_transition(self, too):
         """Visually do a transition when programatically selected."""
@@ -329,28 +336,22 @@ class MainWindow(GridLayout):
         screen_controls.transition.direction = 'up'
         if self.no_passphrase:
             # Go to Register screen
-            self.current_screen_index = 1
-            screen_controls.current = self.screens[1][0]
+            screen_controls.current = 'register'
         elif self.no_login:
             # Go to Login screen
-            self.current_screen_index = 0
-            screen_controls.current = self.screens[0][0]
+            screen_controls.current = 'login'
         else:
             # Go to page that was requested
-            self.current_screen_index = too
-            screen_controls.current = self.screens[too][0]
+            screen_controls.current = too
 
     def add_conversation_visually(self,name):
         """Visually add a new conversation screen."""
         new_conversation_screen = ConversationScreen(name=name)
 
-        self.current_screen_index = len(self.screens)
-        self.screens.append((name, new_conversation_screen, []))
-
         screen_controls = self.ids['screen_controls']
         screen_controls.add_widget(new_conversation_screen)
         screen_controls.transition.direction = 'up'
-        screen_controls.current = self.screens[self.current_screen_index][0]
+        screen_controls.current = name
 
         self.ids['conversation_list'].data.append({'text':name})
 
@@ -358,20 +359,21 @@ class MainWindow(GridLayout):
 
     def remove_conversation_visually(self):
         """Visually remove a conversation screen."""
-        current_conversation = self.screens[self.current_screen_index][1]
-        current_conversation_name = self.screens[self.current_screen_index][0]
-
-        del self.screens[self.current_screen_index]
-        self.current_screen_index = 0
+        screen_controls = self.ids['screen_controls']
 
         for obj in self.ids['conversation_list'].data:
-            if obj['text'] == current_conversation_name:
+            if obj['text'] == screen_controls.current:
                 self.ids['conversation_list'].data.remove(obj)
 
-        screen_controls = self.ids['screen_controls']
-        screen_controls.remove_widget(current_conversation)
+        screen_controls.remove_widget(screen_controls.current_screen)
         screen_controls.transition.direction = 'down'
         screen_controls.current = 'settings'
+
+    def add_contact_visually(self,username):
+        """Visually add a contact to contact list."""
+        contact_screen = self.ids['screen_controls'].get_screen('contacts')
+        contact_screen.ids['contact_list_container'].ids['contact_list'].data.append({'text':username})
+
 
     # Will update the conversation log when message is posted.
     def update_conversation_log(self):

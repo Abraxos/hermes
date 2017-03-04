@@ -1,0 +1,46 @@
+<ContactsAdd>:
+	form_label_width: 175
+	form_input_width: 300
+	form_entry_height: 30
+    size_hint_y: 1
+    orientation: 'vertical'
+    Label:
+        size_hint_y: 1
+    Label:
+        text: "Add a Contact"
+        font_size: 50
+        height: 100
+        size_hint_y: None
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: root.form_entry_height
+        Label:
+            size_hint_x: 1
+        Label:
+            size_hint_x: None
+            width: root.form_label_width
+            text: 'By Username'
+        TextInput:
+            id: username_field
+            size_hint_x: None
+            width: root.form_input_width
+            multiline: False
+            text: ""
+        Label:
+            size_hint_x: 1
+    BoxLayout:
+        Label:
+            size_hint_x: 1
+        Button:
+            font_size: 30
+            size_hint_x: None
+            size_hint_y: None
+            height: 40
+            width: 200
+            text: 'Find and Add'
+            on_release: root.find_main_window().add_contact(username_field.text)
+        Label:
+            size_hint_x: 1
+    Label:
+        size_hint_y: 1
