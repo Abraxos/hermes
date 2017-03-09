@@ -25,9 +25,9 @@ class Test(unittest.TestCase):
         app.main_window.finish_init(None)
         app.main_window.add_conversation_to_UI()
         app.main_window.ids['text_entry'].text = "Hello World!" # Simulate user input
-        
+
         # Execute
-        app.main_window.post_message()
+        app.main_window.post_message_visually()
 
         screen_index = app.main_window.current_screen_index
         conversation = app.main_window.screens[screen_index][1]
@@ -41,7 +41,7 @@ class Test(unittest.TestCase):
         app.stop()
 
     # same named function as the filename(!)
-    def test_post_message(self):
+    def test_post_message_visually(self):
         app = Messenger()
         p = partial(self.run_test, app)
         Clock.schedule_once(p, 0.000001)

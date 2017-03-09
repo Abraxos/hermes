@@ -1,6 +1,7 @@
 #:import SlideTransition kivy.uix.screenmanager.SlideTransition
 #:include lists/conversation.kv
 #:include lists/message.kv
+#:include lists/contact.kv
 #:include screens/add.kv
 #:include screens/login.kv
 #:include screens/register.kv
@@ -49,11 +50,11 @@
 		Button:
 			id: go_to_menu
 			text: 'settings'
-			on_press: root.force_transition(2)
+			on_press: root.force_transition('settings')
 		Button:
 			id: go_to_contacts
 			text: 'contacts'
-			on_press: root.force_transition(3)
+			on_press: root.force_transition('contacts')
 
 	BoxLayout:
 		id: input_controls
@@ -69,7 +70,7 @@
 				text: 'add'
 				size_hint_x: None
 				width: 100
-				on_press: root.force_transition(4)
+				on_press: root.force_transition('add')
 			Button:
 				id: leave
 				text: 'leave'

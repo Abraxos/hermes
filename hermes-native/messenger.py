@@ -38,9 +38,11 @@ from twisted.internet import reactor, protocol #pylint: disable=C0413
 class MessengerUtility:
     """Contains useful custom utilities specific to this application."""
     def find_main_window(self):
+        """Find the main window, to call methods encapsulated there."""
         return self.__search_main_window(self)
 
     def __search_main_window(self, root):
+        """Simple recursive search for main window."""
         if hasattr(root, 'name') and root.name is 'main_window':
             return root
         else:
@@ -52,6 +54,19 @@ class MessengerUtility:
 
 # SUB-COMPONENTS
 # UI items inside the main window
+
+class ContactNameBox(SelectableView, Button, Label, MessengerUtility):
+    """Contact Name Banner Box element."""
+    pass
+
+class ContactDeleteBox(SelectableView, Button, MessengerUtility):
+    """Contact Delete Box element."""
+    pass
+
+class ContactView(SelectableView, BoxLayout, MessengerUtility):
+    """Contact list item element."""
+    pass
+
 class UserAvatar(SelectableView, Button, MessengerUtility):
     """User avatar element."""
     pass
@@ -62,10 +77,6 @@ class MessageTextBox(SelectableView, Button, Label, MessengerUtility):
 
 class MessageView(SelectableView, BoxLayout, MessengerUtility):
     """Message container element."""
-    pass
-
-class ContactView(SelectableView, Button, MessengerUtility):
-    """Contact list item element."""
     pass
 
 class ConversationListItemView(SelectableView, Button, MessengerUtility):
@@ -143,12 +154,12 @@ class MainWindow(GridLayout):
     # start up actions
     def login(self, passphrase):
         """login."""
-        with open('archive/init.config', 'r') as f:
-            salt = f.read()
+        with open('archive/init.config', 'r') as config_file:
+            salt = config_file.read()
             self.init_fernet(salt, passphrase)
         self.unlock()
 
-    def register(self,passphrase,reenter_passphrase):
+    def register(self, passphrase, reenter_passphrase):
         """register."""
         if passphrase != reenter_passphrase:
             self.display_error('register error', 'Passphrases not matchings, try again.')
@@ -157,20 +168,20 @@ class MainWindow(GridLayout):
         else:
             salt = os.urandom(16)
             self.no_passphrase = False
-            self.init_fernet(salt,passphrase)
+            self.init_fernet(salt, passphrase)
             self.populate_archive(salt)
             self.unlock()
 
     # message controls
-    def send_message(self,text_input):
+    def send_message(self, text_input):
         """send a message to converation."""
         screen_controls = self.ids['screen_controls']
         app = App.get_running_app()
         current_user = 'Ivan Pozdnyakov'
-        current_conversation = screen_controls.get_screen(screen_controls.current_screen)
+        current_conversation = screen_controls.get_screen(screen_controls.current)
         if text_input and app.connection:
             app.connection.write(str(text_input))
-            self.post_message(current_user, current_conversation, text_input)
+            self.post_message_visually(current_user, current_conversation, text_input)
             self.update_conversation_log()
 
     def recieve_message(self, text_recieved):
@@ -178,7 +189,7 @@ class MainWindow(GridLayout):
         peer_user = 'Shadow Ivan Pozdnyakov'
         screen_controls = self.ids['screen_controls']
         current_conversation = screen_controls.get_screen(screen_controls.current)
-        self.post_message(peer_user, current_conversation, text_recieved)
+        self.post_message_visually(peer_user, current_conversation, text_recieved)
         self.update_conversation_log()
 
     # conversation controls
@@ -214,10 +225,12 @@ class MainWindow(GridLayout):
         pass
 
     def invite_contact(self):
+        """Invite a contact to a group."""
         pass
 
     # INTERNALS
-    def display_error(self,error,message):
+    def display_error(self, error, message):
+        """Display an error popup with specific error title and messsage."""
         content = GridLayout(cols=1)
         content_cancel = Button(text='Cancel', size_hint_y=None, height=40)
         content.add_widget(Label(text=message))
@@ -235,7 +248,7 @@ class MainWindow(GridLayout):
         self.ids['conversation_list'].data = [{'text': item.name} for item in []]
         self.latest_screen_id = 0
         self.no_passphrase = self.archive_not_populated()
-        if(self.no_passphrase):
+        if self.no_passphrase:
             self.force_transition('register')
         else:
             self.force_transition('login')
@@ -254,11 +267,12 @@ class MainWindow(GridLayout):
             outfile.write(entry)
 
     def unlock(self):
+        """Unlock the application data on filesystem and populate in the UI."""
         for log in os.listdir('archive'):
             if log.endswith('.log'):
-                with open('archive/'+log, 'r') as f:
+                with open('archive/'+log, 'r') as log_file:
                     read_title = True
-                    for cipher in f:
+                    for cipher in log_file:
                         clear = self.fernet.decrypt(cipher)
                         if read_title:
                             self.add_conversation_visually(clear)
@@ -267,17 +281,17 @@ class MainWindow(GridLayout):
                             screen_controls = self.ids['screen_controls']
                             message = clear.split(':\n')
                             conversation = screen_controls.get_screen(screen_controls.current)
-                            self.post_message(message[0],conversation,message[1])
+                            self.post_message_visually(message[0], conversation, message[1])
         self.no_login = False
         self.force_transition('settings')
 
-    def init_fernet(self,salt,passphrase):
+    def init_fernet(self, salt, passphrase):
         """initialize our fernet global, which we can use for encryption/decryption."""
-        kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),length=32,salt=salt,iterations=100000,backend=default_backend())
+        kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000, backend=default_backend())
         key = base64.urlsafe_b64encode(kdf.derive(unicode.encode(passphrase)))
         self.fernet = Fernet(key)
 
-    def post_message(self, current_user, current_conversation, text_input):
+    def post_message_visually(self, current_user, current_conversation, text_input):
         """visually display any new messages."""
         if current_conversation is not None and text_input != '':
             message_log = current_conversation.ids['chat_log'].data
@@ -324,7 +338,6 @@ class MainWindow(GridLayout):
         app.profile_control = content
 
     def select_transition(self, selection):
-        print(selection)
         """Do a visual transition on conversation select."""
         screen_controls = self.ids['screen_controls']
         screen_controls.transition.direction = 'up'
@@ -344,7 +357,7 @@ class MainWindow(GridLayout):
             # Go to page that was requested
             screen_controls.current = too
 
-    def add_conversation_visually(self,name):
+    def add_conversation_visually(self, name):
         """Visually add a new conversation screen."""
         new_conversation_screen = ConversationScreen(name=name)
 
@@ -369,24 +382,27 @@ class MainWindow(GridLayout):
         screen_controls.transition.direction = 'down'
         screen_controls.current = 'settings'
 
-    def add_contact_visually(self,username):
+    def add_contact_visually(self, username):
         """Visually add a contact to contact list."""
         contact_screen = self.ids['screen_controls'].get_screen('contacts')
         contact_screen.ids['contact_list_container'].ids['contact_list'].data.append({'text':username})
 
-
     # Will update the conversation log when message is posted.
     def update_conversation_log(self):
         """Update the local conversation log with latest message."""
-        with open('archive/'+self.screens[self.current_screen_index][0]+'_conversation.log', 'a') as outfile:
-            entry = self.screens[self.current_screen_index][2][-1]['text']
+        screen_controls = self.ids['screen_controls']
+        with open('archive/'+screen_controls.current+'_conversation.log', 'a') as outfile:
+            current_conversation = screen_controls.get_screen(screen_controls.current)
+            message_log = current_conversation.ids['chat_log'].data
+            entry = message_log[-1]['text']
             outfile.write(self.fernet.encrypt(bytes(entry))+'\n')
 
     # Will create a converation
     def create_conversation_log(self):
         """Create the local conversation log, first line will have some meta-data."""
-        with open('archive/'+self.screens[self.current_screen_index][0]+'_conversation.log', 'a') as outfile:
-            entry = self.screens[self.current_screen_index][0]
+        screen_controls = self.ids['screen_controls']
+        with open('archive/'+screen_controls.current+'_conversation.log', 'a') as outfile:
+            entry = screen_controls.current
             outfile.write(self.fernet.encrypt(entry)+ '\n')
 
 # APPLICATION
