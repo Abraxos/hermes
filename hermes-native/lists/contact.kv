@@ -1,0 +1,23 @@
+<ContactView@SelectableView+BoxLayout>:
+	name: 'contact_container'
+	orientation: 'horizontal'
+	size_hint_x: 1
+	size_hint_y: None
+	height: 100
+	text: ''
+	ContactNameBox:
+		id: contact_name_box
+		name: 'contact_name_box'
+		size_hint_x: 1
+		size_hint_y: None
+		text_size: self.width, None
+		height: 100
+		text: root.text
+	ContactDeleteBox:
+		id: contact_delete_box
+		name: 'contact_delete_box'
+		on_press: root.find_main_window().delete_contact(contact_name_box.text)
+		size_hint_x: None
+		size_hint_y: None
+		width: 100
+		height: 100

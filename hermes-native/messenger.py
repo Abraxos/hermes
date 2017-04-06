@@ -2,6 +2,8 @@
 it will use the Hermes API under the hood."""
 import os
 import base64
+import hashlib
+import binascii
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.listview import ListView #pylint: disable=W0611
@@ -20,22 +22,23 @@ from kivy.uix.settings import SettingsWithSidebar
 from kivy.adapters.listadapter import ListAdapter #pylint: disable=W0611
 from kivy.clock import Clock
 from kivy.factory import Factory #pylint: disable=W0611
-from kivy.support import install_twisted_reactor
+#from kivy.support import install_twisted_reactor #D##ISABLING FOR NOW###
 from cryptography.fernet import Fernet
+from cryptography.fernet import InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from settings import settings_json
 
 # PRELIMINARY
-install_twisted_reactor()
+#install_twisted_reactor() ###DISABLING FOR NOW###
 
 from twisted.internet import reactor, protocol #pylint: disable=C0413
 
 # UTILITY
 # Custom Application Methods will go here, components that need something from
 # here will inherit this class.
-class MessengerUtility:
+class MessengerUtility(object):
     """Contains useful custom utilities specific to this application."""
     def find_main_window(self):
         """Find the main window, to call methods encapsulated there."""
@@ -142,6 +145,9 @@ class MainWindow(GridLayout):
     # This is used to encrypt and decrypt local cache
     fernet = None
 
+    # Salt for creating hashs
+    salt = None
+
     def __init__(self, **kwargs):
         super(MainWindow, self).__init__(**kwargs)
         Clock.schedule_once(self.finish_init)
@@ -154,10 +160,13 @@ class MainWindow(GridLayout):
     # start up actions
     def login(self, passphrase):
         """login."""
-        with open('archive/init.config', 'r') as config_file:
-            salt = config_file.read()
-            self.init_fernet(salt, passphrase)
-        self.unlock()
+        with open('archive/init.config', 'rb') as config_file:
+            self.salt = config_file.read()
+        self.init_fernet(passphrase)
+        try:
+            self.unlock()
+        except InvalidToken:
+            self.display_error('login error', 'Opps, password is incorrect.')
 
     def register(self, passphrase, reenter_passphrase):
         """register."""
@@ -166,10 +175,10 @@ class MainWindow(GridLayout):
         elif len(passphrase) < 15:
             self.display_error('register error', 'Passphrases less than 15 characters, try again.')
         else:
-            salt = os.urandom(16)
+            self.salt = os.urandom(16)
             self.no_passphrase = False
-            self.init_fernet(salt, passphrase)
-            self.populate_archive(salt)
+            self.init_fernet(passphrase)
+            self.populate_archive()
             self.unlock()
 
     # message controls
@@ -179,10 +188,10 @@ class MainWindow(GridLayout):
         app = App.get_running_app()
         current_user = 'Ivan Pozdnyakov'
         current_conversation = screen_controls.get_screen(screen_controls.current)
-        if text_input and app.connection:
-            app.connection.write(str(text_input))
-            self.post_message_visually(current_user, current_conversation, text_input)
-            self.update_conversation_log()
+        #if text_input and app.connection:
+        # app.connection.write(str(text_input)) ###DISABLING FOR NOW###
+        self.post_message_visually(current_user, current_conversation, text_input)
+        self.update_conversation_log()
 
     def recieve_message(self, text_recieved):
         """recieve a message from the converation."""
@@ -207,6 +216,7 @@ class MainWindow(GridLayout):
 
     def leave_conversation(self):
         """leave a conversation."""
+        self.delete_conversation_log()
         self.remove_conversation_visually()
 
     def press_message_list_item(self, selection):
@@ -220,9 +230,11 @@ class MainWindow(GridLayout):
     # contact screen controls
     def add_contact(self, username):
         self.add_contact_visually(username)
+        self.create_a_contact_file(username)
 
-    def delete_contact(self):
-        pass
+    def delete_contact(self, username):
+        self.remove_contact_visually(username)
+        self.delete_a_contact_file(username)
 
     def invite_contact(self):
         """Invite a contact to a group."""
@@ -260,35 +272,42 @@ class MainWindow(GridLayout):
         else:
             return False
 
-    def populate_archive(self, salt):
+    def populate_archive(self):
         """Save our salt in the archive folder."""
-        with open('archive/init.config', 'a') as outfile:
-            entry = salt
-            outfile.write(entry)
+        with open('archive/init.config', 'wb') as outfile:
+            outfile.write(self.salt)
 
     def unlock(self):
         """Unlock the application data on filesystem and populate in the UI."""
         for log in os.listdir('archive'):
-            if log.endswith('.log'):
+            if log.endswith('conversation.log'):
                 with open('archive/'+log, 'r') as log_file:
                     read_title = True
                     for cipher in log_file:
-                        clear = self.fernet.decrypt(cipher)
+                        clear = self.fernet.decrypt(str.encode(cipher.rstrip()))
                         if read_title:
-                            self.add_conversation_visually(clear)
+                            self.add_conversation_visually(clear.decode())
                             read_title = False
                         else:
                             screen_controls = self.ids['screen_controls']
-                            message = clear.split(':\n')
+                            message = clear.decode().split(':\n')
                             conversation = screen_controls.get_screen(screen_controls.current)
                             self.post_message_visually(message[0], conversation, message[1])
+            elif log.endswith('contact.log'):
+                with open('archive/'+log, 'r') as log_file:
+                    for cipher in log_file:
+                        clear = self.fernet.decrypt(str.encode(cipher))
+                        self.add_contact_visually(clear.decode())
+
+
         self.no_login = False
         self.force_transition('settings')
 
-    def init_fernet(self, salt, passphrase):
+    def init_fernet(self, passphrase):
         """initialize our fernet global, which we can use for encryption/decryption."""
-        kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000, backend=default_backend())
-        key = base64.urlsafe_b64encode(kdf.derive(unicode.encode(passphrase)))
+        kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=bytes(self.salt),
+                         iterations=100000, backend=default_backend())
+        key = base64.urlsafe_b64encode(kdf.derive(str.encode(passphrase)))
         self.fernet = Fernet(key)
 
     def post_message_visually(self, current_user, current_conversation, text_input):
@@ -385,25 +404,54 @@ class MainWindow(GridLayout):
     def add_contact_visually(self, username):
         """Visually add a contact to contact list."""
         contact_screen = self.ids['screen_controls'].get_screen('contacts')
-        contact_screen.ids['contact_list_container'].ids['contact_list'].data.append({'text':username})
+        contact_screen.ids['contact_list_container'].\
+        ids['contact_list'].data.append({'text':username})
+
+    def remove_contact_visually(self, username):
+        """Visually remove a contact from contact list."""
+        contact_screen = self.ids['screen_controls'].get_screen('contacts')
+
+        for obj in contact_screen.ids['contact_list_container'].ids['contact_list'].data:
+            print(obj['text'])
+            if obj['text'] == username:
+                contact_screen.ids['contact_list_container'].ids['contact_list'].data.remove(obj)
 
     # Will update the conversation log when message is posted.
     def update_conversation_log(self):
         """Update the local conversation log with latest message."""
         screen_controls = self.ids['screen_controls']
-        with open('archive/'+screen_controls.current+'_conversation.log', 'a') as outfile:
+        dk = hashlib.pbkdf2_hmac('sha256', str.encode(screen_controls.current), self.salt, 100000)
+        with open('archive/'+binascii.hexlify(dk).decode()+'_conversation.log', 'a') as outfile:
             current_conversation = screen_controls.get_screen(screen_controls.current)
             message_log = current_conversation.ids['chat_log'].data
             entry = message_log[-1]['text']
-            outfile.write(self.fernet.encrypt(bytes(entry))+'\n')
+            outfile.write(self.fernet.encrypt(str.encode(entry)).decode()+'\n')
 
-    # Will create a converation
+    # Will create a converation log
     def create_conversation_log(self):
         """Create the local conversation log, first line will have some meta-data."""
         screen_controls = self.ids['screen_controls']
-        with open('archive/'+screen_controls.current+'_conversation.log', 'a') as outfile:
-            entry = screen_controls.current
-            outfile.write(self.fernet.encrypt(entry)+ '\n')
+        dk = hashlib.pbkdf2_hmac('sha256', str.encode(screen_controls.current), self.salt, 100000)
+        with open('archive/'+binascii.hexlify(dk).decode()+'_conversation.log', 'a') as outfile:
+            outfile.write(self.fernet.encrypt(str.encode(screen_controls.current)).decode()+ '\n')
+
+    # Will delete a conversation log
+    def delete_conversation_log(self):
+        """Delete the conversation log."""
+        screen_controls = self.ids['screen_controls']
+        dk = hashlib.pbkdf2_hmac('sha256', str.encode(screen_controls.current), self.salt, 100000)
+        os.remove('archive/'+binascii.hexlify(dk).decode()+'_conversation.log')
+
+    # Will create a contact file
+    def create_a_contact_file(self, username):
+        dk = hashlib.pbkdf2_hmac('sha256', str.encode(username), self.salt, 100000)
+        with open('archive/'+binascii.hexlify(dk).decode()+'_contact.log', 'a') as outfile:
+            outfile.write(self.fernet.encrypt(str.encode(username)).decode()+ '\n')
+
+    # Will delete a contact file
+    def delete_a_contact_file(self,username):
+        dk = hashlib.pbkdf2_hmac('sha256', str.encode(username), self.salt, 100000)
+        os.remove('archive/'+binascii.hexlify(dk).decode()+'_contact.log')
 
 # APPLICATION
 # contains everything else that is defined
@@ -438,7 +486,7 @@ class Messenger(App):
 
     def on_config_change(self, config, section, key, value):
         """on a config change we report back information."""
-        print config, section, key, value
+        #print config, section, key, value
 
     def on_connection(self, connection):
         """on established connection set the connection variable."""
