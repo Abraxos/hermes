@@ -193,6 +193,8 @@ class MainWindow(GridLayout):
         self.post_message_visually(current_user, current_conversation, text_input)
         self.update_conversation_log()
 
+        self.ids['text_entry'].text = ""
+
     def recieve_message(self, text_recieved):
         """recieve a message from the converation."""
         peer_user = 'Shadow Ivan Pozdnyakov'
